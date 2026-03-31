@@ -1,6 +1,6 @@
 
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useRef, useCallback } from "react";
 import {
   LayoutDashboard, FileText, PenTool, ShieldCheck, MessageSquare,
   Calculator, Newspaper, Settings, Lock, Scale, Bell, Search,
@@ -43,6 +43,24 @@ const docTypes = [
 
 export function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+
+  const handleFile = useCallback((file: File) => {
+    if (!file) return;
+    navigate("/analyzer", { state: { file } });
+  }, [navigate]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragOver(true); };
+  const handleDragLeave = () => setDragOver(false);
 
   return (
     <div className="flex min-h-screen w-full bg-[#f8f9fb]" style={{ fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
@@ -178,8 +196,25 @@ export function Dashboard() {
                   </div>
                   <ShieldCheck className="h-5 w-5 text-gray-300" />
                 </div>
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 flex flex-col items-center justify-center text-center mb-4 hover:border-blue-300 hover:bg-blue-50/30 transition-colors cursor-pointer">
-                  <Upload className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                <div
+                  className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center mb-4 transition-colors cursor-pointer ${
+                    dragOver
+                      ? "border-blue-400 bg-blue-50/60"
+                      : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/30"
+                  }`}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.docx,.doc"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+                  />
+                  <Upload className={`h-8 w-8 mx-auto mb-2 transition-colors ${dragOver ? "text-blue-400" : "text-gray-300"}`} />
                   <p className="text-sm font-medium text-gray-700">Glissez-déposez votre document ici</p>
                   <p className="text-xs text-gray-400 mt-1">PDF, DOCX – Contrats, avenants, procédures</p>
                 </div>
