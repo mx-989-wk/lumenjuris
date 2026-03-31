@@ -71,6 +71,7 @@ export const TextInputZone: React.FC<TextInputZoneProps> = ({
               : "text-gray-600 hover:text-gray-800"
           }`}
         >
+
           <Type size={20} />
           Saisir le texte directement
         </button>
