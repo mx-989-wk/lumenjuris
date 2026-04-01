@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import {
   LayoutDashboard, FileText, PenTool, ShieldCheck, MessageSquare,
-  Calculator, Newspaper, Settings, Lock, Scale, Bell, Search,
+  Calculator, Newspaper, Lock, Scale, Bell, Search,
   PanelLeft, ChevronDown,
 } from "lucide-react";
 
@@ -14,7 +14,6 @@ const navItems = [
   { icon: MessageSquare,   label: "Chat juridique RH",     path: "/chatjuridique" },
   { icon: Calculator,      label: "Calculateur juridique", path: "/calculateur" },
   { icon: Newspaper,       label: "Veille information",    path: "/veille" },
-  { icon: Settings,        label: "Paramètres",            path: "/settings" },
 ];
 
 export function MainLayout() {
