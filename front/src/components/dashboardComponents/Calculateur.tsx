@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Calculator, Download, Info } from "lucide-react";
-import { calculateLegalSeverance } from "../../utils/dashboard/calculerIndemnitees";
-import type { ContractType, SeveranceCalculationResult, TerminationReason } from "../../types/calculIndemnitees";
+import { calculerIndemniteLegale } from "../../utils/dashboard/calculerIndemnitees";
+import type { TypeContrat, ResultatCalculIndemnite, MotifRupture } from "../../types/calculIndemnitees";
 
-const MOTIF_VERS_RAISON_RESILIATION: Record<string, TerminationReason> = {
+const MOTIF_VERS_RAISON_RESILIATION: Record<string, MotifRupture> = {
   personnel: "standard",
   economique: "standard",
   faute_grave: "gross_misconduct",
@@ -18,7 +18,7 @@ const LIBELLE_MOTIF: Record<string, string> = {
 };
 
 export function Calculateur() {
-  const [typeContrat, setTypeContrat] = useState<ContractType>("CDI");
+  const [typeContrat, setTypeContrat] = useState<TypeContrat>("CDI");
   const [ancienneteAnnees, setAncienneteAnnees] = useState("8");
   const [ancienneteMois, setAncienneteMois] = useState("0");
   const [salaireMensuelBrut, setSalaireMensuelBrut] = useState("3200");
@@ -26,12 +26,12 @@ export function Calculateur() {
   const [salaireMoyen3Mois, setSalaireMoyen3Mois] = useState("3200");
   const [ratioTempsPartiel, setRatioTempsPartiel] = useState("1");
   const [motifLicenciement, setMotifLicenciement] = useState("personnel");
-  const [resultat, setResultat] = useState<SeveranceCalculationResult | null>(null);
+  const [resultat, setResultat] = useState<ResultatCalculIndemnite | null>(null);
 
   const lancerCalcul = () => {
     const raisonResiliation = MOTIF_VERS_RAISON_RESILIATION[motifLicenciement] ?? "standard";
 
-    setResultat(calculateLegalSeverance({
+    setResultat(calculerIndemniteLegale({
       contractType: typeContrat,
       terminationReason: raisonResiliation,
       seniority: {
@@ -67,7 +67,7 @@ export function Calculateur() {
             <label className="text-sm font-medium text-gray-700">Type de contrat</label>
             <select
               value={typeContrat}
-              onChange={(e) => setTypeContrat(e.target.value as ContractType)}
+              onChange={(e) => setTypeContrat(e.target.value as TypeContrat)}
               className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 outline-none focus:border-[#354F99] transition-colors bg-white"
             >
               <option value="CDI">CDI</option>

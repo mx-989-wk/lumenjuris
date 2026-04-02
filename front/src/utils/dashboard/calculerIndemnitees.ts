@@ -1,74 +1,74 @@
 import type {
-  SeveranceCalculationInput,
-  SeveranceCalculationResult,
+  EntreeCalculIndemnite,
+  ResultatCalculIndemnite,
 } from '../../types/calculIndemnitees';
 
-const MIN_ELIGIBILITY_MONTHS = 8;
-const TEN_YEARS = 10;
-const RATE_BEFORE_TEN_YEARS = 1 / 4;
-const RATE_AFTER_TEN_YEARS = 1 / 3;
+const MOIS_MINIMUM_ELIGIBILITE = 8;
+const DIX_ANS = 10;
+const TAUX_AVANT_DIX_ANS = 1 / 4;
+const TAUX_APRES_DIX_ANS = 1 / 3;
 
-function roundTo2(value: number): number {
-  return Math.round(value * 100) / 100;
+function arrondir2Dec(valeur: number): number {
+  return Math.round(valeur * 100) / 100;
 }
 
-function toTotalMonths(years: number, months: number): number {
-  return years * 12 + months;
+function enMoisTotal(annees: number, mois: number): number {
+  return annees * 12 + mois;
 }
 
-function toYears(totalMonths: number): number {
-  return totalMonths / 12;
+function enAnnees(moisTotal: number): number {
+  return moisTotal / 12;
 }
 
-function validateInput(input: SeveranceCalculationInput): string[] {
-  const errors: string[] = [];
+function validerEntree(entree: EntreeCalculIndemnite): string[] {
+  const erreurs: string[] = [];
 
-  const numericChecks: Array<[string, number]> = [
-    ['Seniority years', input.seniority.years],
-    ['Seniority months', input.seniority.months],
-    ['Monthly gross salary', input.monthlyGrossSalary],
-    ['Average salary (12 months)', input.averageSalary12Months],
-    ['Average salary (3 months)', input.averageSalary3Months],
-    ['Part-time ratio', input.partTimeRatio ?? 1],
+  const verificationsNumeriques: Array<[string, number]> = [
+    ['Années d\'ancienneté', entree.seniority.years],
+    ['Mois d\'ancienneté', entree.seniority.months],
+    ['Salaire mensuel brut', entree.monthlyGrossSalary],
+    ['Salaire moyen sur 12 mois', entree.averageSalary12Months],
+    ['Salaire moyen sur 3 mois', entree.averageSalary3Months],
+    ['Taux temps partiel', entree.partTimeRatio ?? 1],
   ];
 
-  for (const [label, value] of numericChecks) {
-    if (!Number.isFinite(value)) {
-      errors.push(`${label} must be a finite number.`);
+  for (const [libelle, valeur] of verificationsNumeriques) {
+    if (!Number.isFinite(valeur)) {
+      erreurs.push(`${libelle} doit être un nombre fini.`);
       continue;
     }
 
-    if (value < 0) {
-      errors.push(`${label} cannot be negative.`);
+    if (valeur < 0) {
+      erreurs.push(`${libelle} ne peut pas être négatif.`);
     }
   }
 
-  if (!Number.isInteger(input.seniority.years)) {
-    errors.push('Seniority years must be an integer.');
+  if (!Number.isInteger(entree.seniority.years)) {
+    erreurs.push('Les années d\'ancienneté doivent être un entier.');
   }
 
-  if (!Number.isInteger(input.seniority.months)) {
-    errors.push('Seniority months must be an integer.');
+  if (!Number.isInteger(entree.seniority.months)) {
+    erreurs.push('Les mois d\'ancienneté doivent être un entier.');
   }
 
-  if (input.seniority.months < 0 || input.seniority.months > 11) {
-    errors.push('Seniority months must be between 0 and 11.');
+  if (entree.seniority.months < 0 || entree.seniority.months > 11) {
+    erreurs.push('Les mois d\'ancienneté doivent être compris entre 0 et 11.');
   }
 
-  const partTimeRatio = input.partTimeRatio ?? 1;
-  if (partTimeRatio <= 0 || partTimeRatio > 1) {
-    errors.push('Part-time ratio must be greater than 0 and less than or equal to 1.');
+  const tauxTempsPartiel = entree.partTimeRatio ?? 1;
+  if (tauxTempsPartiel <= 0 || tauxTempsPartiel > 1) {
+    erreurs.push('Le taux de temps partiel doit être supérieur à 0 et inférieur ou égal à 1.');
   }
 
-  return errors;
+  return erreurs;
 }
 
-export function calculateLegalSeverance(
-  input: SeveranceCalculationInput,
-): SeveranceCalculationResult {
-  const errors = validateInput(input);
+export function calculerIndemniteLegale(
+  entree: EntreeCalculIndemnite,
+): ResultatCalculIndemnite {
+  const erreurs = validerEntree(entree);
 
-  if (errors.length > 0) {
+  if (erreurs.length > 0) {
     return {
       isEligible: false,
       indemnityAmount: 0,
@@ -78,108 +78,108 @@ export function calculateLegalSeverance(
         partBefore10Years: 0,
         partAfter10Years: 0,
       },
-      explanation: ['Calculation could not be completed due to validation errors.'],
-      errors,
+      explanation: ['Le calcul n\'a pas pu être effectué en raison d\'erreurs de validation.'],
+      errors: erreurs,
     };
   }
 
-  const totalMonths = toTotalMonths(input.seniority.years, input.seniority.months);
-  const seniorityInYears = toYears(totalMonths);
-  const partTimeRatio = input.partTimeRatio ?? 1;
+  const moisTotal = enMoisTotal(entree.seniority.years, entree.seniority.months);
+  const ancienneteEnAnnees = enAnnees(moisTotal);
+  const tauxTempsPartiel = entree.partTimeRatio ?? 1;
 
-  const rawReferenceSalary = Math.max(
-    input.monthlyGrossSalary,
-    input.averageSalary12Months,
-    input.averageSalary3Months,
+  const salaireBrutMax = Math.max(
+    entree.monthlyGrossSalary,
+    entree.averageSalary12Months,
+    entree.averageSalary3Months,
   );
 
-  const referenceSalaryUsed = roundTo2(rawReferenceSalary * partTimeRatio);
+  const salaireReference = arrondir2Dec(salaireBrutMax * tauxTempsPartiel);
 
-  const explanation: string[] = [
-    `Reference salary is the highest value among base salary (€${roundTo2(
-      input.monthlyGrossSalary,
-    )}), average over 12 months (€${roundTo2(
-      input.averageSalary12Months,
-    )}), and average over 3 months (€${roundTo2(input.averageSalary3Months)}).`,
-    `A part-time ratio of ${partTimeRatio} is applied, giving a reference salary of €${referenceSalaryUsed}.`,
-    `Total seniority considered: ${input.seniority.years} year(s) and ${input.seniority.months} month(s) (${roundTo2(
-      seniorityInYears,
-    )} years).`,
+  const explication: string[] = [
+    `Le salaire de référence est la valeur la plus haute entre le salaire de base (€${arrondir2Dec(
+      entree.monthlyGrossSalary,
+    )}), la moyenne sur 12 mois (€${arrondir2Dec(
+      entree.averageSalary12Months,
+    )}) et la moyenne sur 3 mois (€${arrondir2Dec(entree.averageSalary3Months)}).`,
+    `Un taux de temps partiel de ${tauxTempsPartiel} est appliqué, donnant un salaire de référence de €${salaireReference}.`,
+    `Ancienneté totale prise en compte : ${entree.seniority.years} an(s) et ${entree.seniority.months} mois (${arrondir2Dec(
+      ancienneteEnAnnees,
+    )} ans).`,
   ];
 
-  if (input.contractType !== 'CDI') {
-    explanation.push('Only CDI employees are eligible for legal severance under this rule set.');
+  if (entree.contractType !== 'CDI') {
+    explication.push('Seuls les salariés en CDI sont éligibles à l\'indemnité légale de licenciement.');
     return {
       isEligible: false,
       indemnityAmount: 0,
-      referenceSalaryUsed,
-      seniorityInYears: roundTo2(seniorityInYears),
+      referenceSalaryUsed: salaireReference,
+      seniorityInYears: arrondir2Dec(ancienneteEnAnnees),
       breakdown: {
         partBefore10Years: 0,
         partAfter10Years: 0,
       },
-      explanation,
+      explanation: explication,
       errors: [],
     };
   }
 
-  if (input.terminationReason === 'gross_misconduct' || input.terminationReason === 'serious_misconduct') {
-    explanation.push('No legal severance is due in case of gross misconduct or serious misconduct.');
+  if (entree.terminationReason === 'gross_misconduct' || entree.terminationReason === 'serious_misconduct') {
+    explication.push('Aucune indemnité légale n\'est due en cas de faute grave ou de faute lourde.');
     return {
       isEligible: false,
       indemnityAmount: 0,
-      referenceSalaryUsed,
-      seniorityInYears: roundTo2(seniorityInYears),
+      referenceSalaryUsed: salaireReference,
+      seniorityInYears: arrondir2Dec(ancienneteEnAnnees),
       breakdown: {
         partBefore10Years: 0,
         partAfter10Years: 0,
       },
-      explanation,
+      explanation: explication,
       errors: [],
     };
   }
 
-  if (totalMonths < MIN_ELIGIBILITY_MONTHS) {
-    explanation.push('At least 8 months of uninterrupted service are required for eligibility.');
+  if (moisTotal < MOIS_MINIMUM_ELIGIBILITE) {
+    explication.push('Au moins 8 mois d\'ancienneté continue sont requis pour être éligible.');
     return {
       isEligible: false,
       indemnityAmount: 0,
-      referenceSalaryUsed,
-      seniorityInYears: roundTo2(seniorityInYears),
+      referenceSalaryUsed: salaireReference,
+      seniorityInYears: arrondir2Dec(ancienneteEnAnnees),
       breakdown: {
         partBefore10Years: 0,
         partAfter10Years: 0,
       },
-      explanation,
+      explanation: explication,
       errors: [],
     };
   }
 
-  const yearsBefore10 = Math.min(seniorityInYears, TEN_YEARS);
-  const yearsAfter10 = Math.max(seniorityInYears - TEN_YEARS, 0);
+  const anneesAvant10 = Math.min(ancienneteEnAnnees, DIX_ANS);
+  const anneesApres10 = Math.max(ancienneteEnAnnees - DIX_ANS, 0);
 
-  const partBefore10Years = roundTo2(referenceSalaryUsed * RATE_BEFORE_TEN_YEARS * yearsBefore10);
-  const partAfter10Years = roundTo2(referenceSalaryUsed * RATE_AFTER_TEN_YEARS * yearsAfter10);
-  const indemnityAmount = roundTo2(partBefore10Years + partAfter10Years);
+  const partieAvant10Ans = arrondir2Dec(salaireReference * TAUX_AVANT_DIX_ANS * anneesAvant10);
+  const partieApres10Ans = arrondir2Dec(salaireReference * TAUX_APRES_DIX_ANS * anneesApres10);
+  const montantIndemnite = arrondir2Dec(partieAvant10Ans + partieApres10Ans);
 
-  explanation.push(
-    `For the first 10 years: ${roundTo2(yearsBefore10)} × 1/4 month × €${referenceSalaryUsed} = €${partBefore10Years}.`,
+  explication.push(
+    `Pour les 10 premières années : ${arrondir2Dec(anneesAvant10)} × 1/4 mois × €${salaireReference} = €${partieAvant10Ans}.`,
   );
-  explanation.push(
-    `After 10 years: ${roundTo2(yearsAfter10)} × 1/3 month × €${referenceSalaryUsed} = €${partAfter10Years}.`,
+  explication.push(
+    `Au-delà de 10 ans : ${arrondir2Dec(anneesApres10)} × 1/3 mois × €${salaireReference} = €${partieApres10Ans}.`,
   );
-  explanation.push(`Estimated legal severance amount: €${indemnityAmount}.`);
+  explication.push(`Montant estimé de l'indemnité légale de licenciement : €${montantIndemnite}.`);
 
   return {
     isEligible: true,
-    indemnityAmount,
-    referenceSalaryUsed,
-    seniorityInYears: roundTo2(seniorityInYears),
+    indemnityAmount: montantIndemnite,
+    referenceSalaryUsed: salaireReference,
+    seniorityInYears: arrondir2Dec(ancienneteEnAnnees),
     breakdown: {
-      partBefore10Years,
-      partAfter10Years,
+      partBefore10Years: partieAvant10Ans,
+      partAfter10Years: partieApres10Ans,
     },
-    explanation,
+    explanation: explication,
     errors: [],
   };
 }
