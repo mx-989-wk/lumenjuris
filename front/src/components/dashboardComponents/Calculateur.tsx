@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Calculator, Download, Info } from "lucide-react";
-import { calculateLegalSeverance } from "../components/Calculator/calculerIndemnitees";
-import type { ContractType, SeveranceCalculationResult, TerminationReason } from "../components/Calculator/typesIndemnitees";
+import { calculateLegalSeverance } from "../Calculator/calculerIndemnitees";
+import type { ContractType, SeveranceCalculationResult, TerminationReason } from "../Calculator/typesIndemnitees";
 
 const MOTIF_VERS_RAISON_RESILIATION: Record<string, TerminationReason> = {
   personnel: "standard",

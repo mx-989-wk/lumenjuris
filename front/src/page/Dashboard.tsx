@@ -175,9 +175,9 @@ export function Dashboard() {
                   <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Indemnité de licenciement</p>
                   <div className="space-y-2.5">
                     {[
-                      { label: "Ancienneté",          value: "8 ans" },
+                      { label: "Ancienneté", value: "8 ans" },
                       { label: "Salaire brut mensuel", value: "3 200 €" },
-                      { label: "Motif",                value: "Personnel" },
+                      { label: "Motif", value: "Personnel" },
                     ].map((row) => (
                       <div key={row.label} className="flex justify-between items-center">
                         <span className="text-xs text-gray-400">{row.label}</span>
