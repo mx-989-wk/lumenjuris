@@ -6,8 +6,7 @@ import axios from "axios"
 import jwt from "jsonwebtoken"
 import cookieParser from "cookie-parser"
 
-import { User } from "./services/classUser";
-
+import { Mailer } from "./infrastructure/mailer/classMailer";
 
 /**
  * Préparation du serveur nodejs/express pour ce backend
@@ -115,17 +114,8 @@ app.get("/auth/google/callback", async (req: Request, res: Response) => {
 
 
 async function sandbox(){
-    const user = new User()
-    const data = {
-        nom : "Beaute",
-        prenom : "Laurent",
-        email : "l.beaute@laposte.net",
-        password : "password123",
-        cgu : true
-    }
-    const created = await user.create(data)
-    console.log("user created :", created)
-    //await user.authenticate("password123", "l.beaute@laposte.net")
+    const mailer = new Mailer("l.beaute@laposte.net")
+    await mailer.sendVerifyAccount("un liens", "beuate laurent")
 }
 
 

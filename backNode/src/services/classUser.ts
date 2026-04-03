@@ -9,11 +9,24 @@ type createDataDTO = {
     cgu:boolean
 }
 
+type dataUpdatedDTO = {
+    email? : string
+    nom? : string
+    prenom? : string
+    password? : string
+}
+
+type returnData = {
+    success : boolean
+    message? : string
+    data ? : Object
+}
+
+
 
 export class User {
 
-
-
+    //Cacthing d'erreur global 
     private errorCatching(err: unknown, fn: string) {
         const e = err as any;
 
@@ -43,6 +56,13 @@ export class User {
             };
         }
 
+        if(e?.code === "P2005"){
+            return{
+                success:false,
+                message : "Votre compte n'a pu être retrouvé"
+            }
+        }
+
         return {
             success: false,
             message: "Une erreur est survenue avec le serveur, merci de réessayer plus tard.",
@@ -50,6 +70,7 @@ export class User {
     }
 
 
+    //Hash d'un password avec bcrypt
     private async hashPassword(password: string): Promise<string> {
         const saltRound = 10;
         const salt = await bcrypt.genSalt(saltRound)
@@ -85,27 +106,46 @@ export class User {
 
 
     //Authentification d'un utilisateur lors d'une connexion
-    async authenticate(password: string, email: string) {
+    async authenticate(password: string, email: string):Promise<returnData> {
         try {
 
             const hashedPassword = await prisma.user.findUnique({
                 where: { email }
             })
-            console.log(hashedPassword)
-            if (!hashedPassword?.password) return
+
+            if (!hashedPassword?.password) return {success : false, message : "Email ou mot de passe invalide"}
+
             const verifyPassword = await bcrypt.compare(password, hashedPassword?.password)
-            console.log(verifyPassword)
+            
+            return {
+                success:verifyPassword,
+                message : verifyPassword ? "Connexion réussite" : "Email ou mot de passe invalide"
+            
+            }
 
         } catch (err) {
-            this.errorCatching(err, "User.authenticate")
+            return this.errorCatching(err, "User.authenticate")
         }
     }
 
-    async update() {
-        try {
 
+    //Mise à jour des données d'un utilisateur
+    async update(idUser: number, dataUpdated:dataUpdatedDTO): Promise<returnData> {
+        try {
+            if(dataUpdated.password){
+                dataUpdated.password = await this.hashPassword(dataUpdated.password)
+            }
+            const userUpdated = await prisma.user.update({
+                where : { idUser :  idUser },
+                data : {...dataUpdated}
+            })
+            return {
+                success: true,
+                message: "Les informations ont été mises à jour",
+                data: userUpdated
+            }
         } catch (err) {
-            this.errorCatching(err, "User.update")
+            return this.errorCatching(err, "User.update")
         }
     }
 }
