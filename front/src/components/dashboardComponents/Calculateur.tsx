@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Download, Info } from "lucide-react";
 import { calculerIndemniteLegale } from "../../utils/dashboard/calculerIndemnitees";
 import type { TypeContrat, ResultatCalculIndemnite, MotifRupture } from "../../types/calculIndemnitees";
+import { AlertBanner } from "../common/AlertBanner";
 
 const MOTIF_VERS_RAISON_RESILIATION: Record<string, MotifRupture> = {
   personnel: "standard",
@@ -35,7 +36,7 @@ export function Calculateur() {
   const lancerCalcul = () => {
     const raisonResiliation = MOTIF_VERS_RAISON_RESILIATION[motifLicenciement] ?? "standard";
     setFormuleApplicable(LIBELLE_MOTIF[motifLicenciement] ?? "1/4 mois par année");
-    setResultat(calculerIndemniteLegale({
+    const calcul = calculerIndemniteLegale({
       contractType: typeContrat,
       terminationReason: raisonResiliation,
       seniority: {
@@ -46,7 +47,19 @@ export function Calculateur() {
       averageSalary12Months: parseFloat(salaireMoyen12Mois) || 0,
       averageSalary3Months: parseFloat(salaireMoyen3Mois) || 0,
       partTimeRatio: parseFloat(ratioTempsPartiel) || 1,
-    }));
+    });
+    setResultat(calcul);
+    if (calcul.errors.length > 0) {
+      const reste = calcul.errors.length - 1;
+      setAlertError({
+        title: calcul.errors[0],
+        detail: reste > 0
+          ? `+${reste} autre${reste > 1 ? "s" : ""} erreur${reste > 1 ? "s" : ""} — vérifiez les champs saisis.`
+          : "Vérifiez les champs saisis et relancez le calcul.",
+      });
+    } else {
+      setAlertError(null);
+    }
   };
 
   return (
@@ -56,6 +69,16 @@ export function Calculateur() {
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Simulateur d'indemnité légale de licenciement</h1>
         <p className="text-sm text-gray-500 mt-1">Estimation basée sur le Code du travail français</p>
       </div>
+
+      {alertError && (
+        <AlertBanner
+          variant="error"
+          title={alertError.title}
+          detail={alertError.detail}
+          duration={6000}
+          onClose={() => setAlertError(null)}
+        />
+      )}
 
       {/* Contenu côte à côte */}
       <div className="flex flex-col lg:flex-row gap-5 items-start">
@@ -89,14 +112,14 @@ export function Calculateur() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Ancienneté — Années</label>
-              <input type="number" min="0" value={ancienneteAnnees} onChange={(e) => setAncienneteAnnees(e.target.value)} className={inputClass} />
+              <input type="number" min="0" value={ancienneteAnnees} onChange={(e) => setAncienneteAnnees(e.target.value)} onKeyDown={blockNonInteger} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>
                 Ancienneté — Mois{" "}
                 <span className="text-gray-400 font-normal">(0 à 11)</span>
               </label>
-              <input type="number" min="0" max="11" value={ancienneteMois} onChange={(e) => setAncienneteMois(e.target.value)} className={inputClass} />
+              <input type="number" min="0" max="11" value={ancienneteMois} onChange={(e) => setAncienneteMois(e.target.value)} onKeyDown={blockNonInteger} className={inputClass} />
             </div>
           </div>
 
@@ -107,21 +130,21 @@ export function Calculateur() {
                 Salaire mensuel brut{" "}
                 <span className="text-gray-400 font-normal">(€ / mois)</span>
               </label>
-              <input type="number" min="0" step="50" value={salaireMensuelBrut} onChange={(e) => setSalaireMensuelBrut(e.target.value)} className={inputClass} />
+              <input type="number" min="0" step="50" value={salaireMensuelBrut} onChange={(e) => setSalaireMensuelBrut(e.target.value)} onKeyDown={blockNonDecimal} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>
                 Moyenne 12 derniers mois{" "}
                 <span className="text-gray-400 font-normal">(€ / mois)</span>
               </label>
-              <input type="number" min="0" step="50" value={salaireMoyen12Mois} onChange={(e) => setSalaireMoyen12Mois(e.target.value)} className={inputClass} />
+              <input type="number" min="0" step="50" value={salaireMoyen12Mois} onChange={(e) => setSalaireMoyen12Mois(e.target.value)} onKeyDown={blockNonDecimal} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>
                 Moyenne 3 derniers mois{" "}
                 <span className="text-gray-400 font-normal">(€ / mois)</span>
               </label>
-              <input type="number" min="0" step="50" value={salaireMoyen3Mois} onChange={(e) => setSalaireMoyen3Mois(e.target.value)} className={inputClass} />
+              <input type="number" min="0" step="50" value={salaireMoyen3Mois} onChange={(e) => setSalaireMoyen3Mois(e.target.value)} onKeyDown={blockNonDecimal} className={inputClass} />
             </div>
           </div>
 
@@ -131,7 +154,7 @@ export function Calculateur() {
               Coefficient temps partiel{" "}
               <span className="text-gray-400 font-normal">(1 = temps plein)</span>
             </label>
-            <input type="number" min="0.01" max="1" step="0.01" value={ratioTempsPartiel} onChange={(e) => setRatioTempsPartiel(e.target.value)} className={inputClass} />
+            <input type="number" min="0.01" max="1" step="0.01" value={ratioTempsPartiel} onChange={(e) => setRatioTempsPartiel(e.target.value)} onKeyDown={blockNonDecimal} className={inputClass} />
           </div>
 
           <button
@@ -205,4 +228,3 @@ export function Calculateur() {
     </div>
   );
 }
-
