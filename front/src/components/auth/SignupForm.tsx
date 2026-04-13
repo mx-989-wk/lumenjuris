@@ -163,16 +163,7 @@ const SignupForm = ({
   };
 
   return (
-    <div className="w-[420px] border border-border p-4 rounded-xl flex flex-col gap-4 bg-background">
-      <section>
-        <h2 className="font-semibold text-[18px]">
-          Créez un compte et accéder à nos outils
-        </h2>
-        <p className="text-black/50 ">Complétez les champs suivants</p>
-      </section>
-
-      <div className="w-full h-px bg-border"></div>
-
+    <section className="flex flex-col">
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-6">
           <div className="grid gap-2">
@@ -221,7 +212,7 @@ const SignupForm = ({
                 onChange={handleChangeEmail}
                 className={
                   emailError &&
-                  "text-destructive border-destructive focus-visible:border-destructive ring-1 ring-destructive"
+                  "text-destructive border-destructive focus-visible:border-destructive focus-visible:ring-destructive ring-1 ring-destructive"
                 }
               />
               <FieldError
@@ -240,7 +231,7 @@ const SignupForm = ({
               <InputGroup
                 className={
                   passwordError &&
-                  "border-2 border-destructive has-[[data-slot=input-group-control]:focus-visible]:border-destructive has-[[data-slot=input-group-control]:focus-visible]:border-2"
+                  "border-2 border-destructive has-[[data-slot=input-group-control]:focus-visible]:border-destructive has-[[data-slot=input-group-control]:focus-visible]:border-2 has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-destructive"
                 }
               >
                 <InputGroupInput
@@ -277,7 +268,7 @@ const SignupForm = ({
               <InputGroup
                 className={
                   confirmPasswordError &&
-                  "border-2 border-destructive has-[[data-slot=input-group-control]:focus-visible]:border-destructive has-[[data-slot=input-group-control]:focus-visible]:border-2"
+                  "border-2 border-destructive has-[[data-slot=input-group-control]:focus-visible]:border-destructive has-[[data-slot=input-group-control]:focus-visible]:border-2 has-[[data-slot=input-group-control]:focus-visible]:ring-3 has-[[data-slot=input-group-control]:focus-visible]:ring-destructive"
                 }
               >
                 <InputGroupInput
@@ -344,10 +335,9 @@ const SignupForm = ({
                       href="https://www.lumenjuris.com/conditions-generales-dutilisation/"
                       className="hover:cursor-pointer underline"
                     >
-                      <span className="after:ml-0.5 after:text-red-500 after:content-['*']">
-                        CGU
-                      </span>
+                      <span>CGU</span>
                     </a>
+                    <span className="text-red-500">*</span>
                   </FieldLabel>
                 </FieldContent>
               </Field>
@@ -361,6 +351,7 @@ const SignupForm = ({
           </div>
 
           <div className="w-full h-px bg-border"></div>
+
           <div className="grid gap-2">
             <Button
               className="text-background border border-lumenjuris"
@@ -386,7 +377,7 @@ const SignupForm = ({
           </div>
         </div>
       </form>
-    </div>
+    </section>
   );
 };
 

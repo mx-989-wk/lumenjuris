@@ -1,8 +1,11 @@
 import SignupForm from "../components/auth/SignupForm";
+import { Button } from "../components/ui/Button";
 
 import { useState } from "react";
 
 export function Inscription() {
+  const [isLoginOnScreen, setIsLoginOnScreen] = useState(false);
+
   const [lastName, setLastName] = useState("");
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
@@ -13,23 +16,71 @@ export function Inscription() {
   return (
     <>
       <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-4 lg:px-6 sticky top-0 z-10"></header>
-      <div className="bg-lumenjuris-background min-h-[calc(100vh-64px)]">
-        <div className="w-[800px] mx-auto pt-10 flex flex-col items-center gap-5">
-          <h1>Créez un compte</h1>
-          <SignupForm
-            lastName={lastName}
-            setLastName={setLastName}
-            firstName={firstName}
-            setFirstName={setFirstName}
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            siren={siren}
-            setSiren={setSiren}
-            acceptCgu={acceptCgu}
-            setAcceptCgu={setAcceptCgu}
-          />
+      <div className="bg-lumenjuris-background min-h-[calc(100vh-64px)] w-screen">
+        <div className="w-[420px] mx-auto pt-12">
+          <div className="w-full border border-border p-4 rounded-xl flex flex-col gap-5 bg-background">
+            <section className="w-full flex items-center justify-between">
+              <div className="w-44 flex flex-col items-center gap-1">
+                <span className="text-[14px] text-muted_foreground">
+                  Pas encore de compte ?
+                </span>
+                <Button
+                  variant="default"
+                  size="lg"
+                  className={
+                    isLoginOnScreen
+                      ? "w-full bg-lumenjuris-background text-lumenjuris hover:text-white"
+                      : "w-full bg-lumenjuris/80 text-white hover:cursor-default"
+                  }
+                  onClick={() => {
+                    setIsLoginOnScreen(false);
+                  }}
+                >
+                  Inscrivez-vous
+                </Button>
+              </div>
+              <div className="w-44 flex flex-col items-center gap-1">
+                <span className="text-[14px] text-muted_foreground">
+                  Déjà un compte ?
+                </span>
+                <Button
+                  variant="default"
+                  size="lg"
+                  className={
+                    isLoginOnScreen
+                      ? "w-full bg-lumenjuris/80 text-white hover:cursor-default"
+                      : "w-full bg-lumenjuris-background text-lumenjuris hover:text-white"
+                  }
+                  onClick={() => {
+                    setIsLoginOnScreen(true);
+                  }}
+                >
+                  Connectez-vous
+                </Button>
+              </div>
+            </section>
+            <div className="w-full h-px bg-border"></div>
+            <>
+              {isLoginOnScreen ? (
+                <div>coucou</div>
+              ) : (
+                <SignupForm
+                  lastName={lastName}
+                  setLastName={setLastName}
+                  firstName={firstName}
+                  setFirstName={setFirstName}
+                  email={email}
+                  setEmail={setEmail}
+                  password={password}
+                  setPassword={setPassword}
+                  siren={siren}
+                  setSiren={setSiren}
+                  acceptCgu={acceptCgu}
+                  setAcceptCgu={setAcceptCgu}
+                />
+              )}
+            </>
+          </div>
         </div>
       </div>
     </>
