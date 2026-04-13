@@ -78,6 +78,8 @@ function relayJsonToPython(req: Request, res: Response, targetPath: string): voi
     });
 }
 
+
+
 // Relay requêtes vers le serveur Node
 function relayToNode(req: Request, res: Response, targetPath: string): void {
   fetch(`${BACKNODE_URL}${targetPath}`, {
@@ -122,11 +124,16 @@ app.post(['/api/openai-chat', '/openai-chat'], (req: Request, res: Response) => 
 app.post(['/api/openai-chat-5', '/openai-chat-5'], (req: Request, res: Response) => relayJsonToPython(req, res, '/openai-chat-5'));
 app.post(['/api/huggingface-generate', '/huggingface-generate'], (req: Request, res: Response) => relayJsonToPython(req, res, '/huggingface-generate'));
 
+
+
+
 // Node - Requêtes INSEE
 app.get('/api/insee/:siren', (req: Request, res: Response) => {
   const siren = encodeURIComponent(req.params.siren);
   relayToNode(req, res, `/enterprise/insee/${siren}`);
 });
+
+
 
 // ---- Front React : Vite middleware (dev) ou static (prod) ---------------------
 if (IS_PROD) {
