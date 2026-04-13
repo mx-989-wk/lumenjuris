@@ -63,6 +63,10 @@ const SignupForm = ({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+  const [submitError, setSubmitError] = useState(false);
+  const [submitCguError, setSubmitCguError] = useState(false);
+
   const passwordErrorTimeout = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -71,28 +75,10 @@ const SignupForm = ({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!lastName || !email || !password || !acceptCgu) {
-      <AlertBanner
-        title="Des champs sont manquants"
-        variant="error"
-        onClose={() => {}}
-      />;
-    } else if (emailError) {
-      <AlertBanner
-        title={emailError}
-        variant="error"
-        onClose={() => {
-          setEmailError("");
-        }}
-      />;
-    } else if (passwordError) {
-      <AlertBanner
-        title={passwordError}
-        variant="error"
-        onClose={() => {
-          setPasswordError("");
-        }}
-      />;
+    if (!lastName || !email || !password) {
+      setSubmitError(true);
+    } else if (acceptCgu === false) {
+      setSubmitCguError(true);
     } else {
       setSubmitLoading(true);
     }
@@ -163,7 +149,28 @@ const SignupForm = ({
   };
 
   return (
-    <section className="flex flex-col">
+    <section className="flex flex-col gap-5">
+      {submitError && (
+        <AlertBanner
+          title="Champs manquants"
+          variant="error"
+          detail="Certains champs obligatoires sont manquants"
+          onClose={() => {
+            setSubmitError(false);
+          }}
+        />
+      )}
+      {submitCguError && (
+        <AlertBanner
+          title="CGU"
+          variant="error"
+          detail="Vous devez acceptez nos CGU"
+          onClose={() => {
+            setSubmitCguError(false);
+          }}
+        />
+      )}
+
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-6">
           <div className="grid gap-2">
@@ -177,7 +184,6 @@ const SignupForm = ({
                 id="lastname"
                 type="text"
                 placeholder="Dupond"
-                required
                 onChange={handleChangeLastname}
               />
             </Field>
@@ -190,7 +196,6 @@ const SignupForm = ({
                 id="firstname"
                 type="text"
                 placeholder="Jenny"
-                required
                 onChange={handleChangeFirstname}
               />
             </Field>
@@ -207,8 +212,7 @@ const SignupForm = ({
                 id="email"
                 type="email"
                 placeholder="mail@example.com"
-                required
-                pattern="/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/"
+                // pattern="/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/"
                 onChange={handleChangeEmail}
                 className={
                   emailError &&
@@ -238,7 +242,6 @@ const SignupForm = ({
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Choisissez un mot de passe"
-                  required
                   onChange={handleChangePassword}
                   className={passwordError && "text-destructive"}
                 />
@@ -275,7 +278,6 @@ const SignupForm = ({
                   id="confirmpassword"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirmez votre mot de passe"
-                  required
                   onChange={handleChangeConfirmPassword}
                   className={confirmPasswordError && "text-destructive"}
                 />
@@ -307,7 +309,6 @@ const SignupForm = ({
                 id="siren"
                 type="text"
                 placeholder="552 178 639"
-                required
                 onChange={handleChangeFirstname}
               />
             </Field>
@@ -320,7 +321,6 @@ const SignupForm = ({
                   id="terms-checkbox-desc"
                   name="terms-checkbox-desc"
                   defaultChecked={false}
-                  required
                   onCheckedChange={(checked) => {
                     handleCheckCgu({
                       target: { checked },
@@ -355,21 +355,12 @@ const SignupForm = ({
           <div className="grid gap-2">
             <Button
               className="text-background border border-lumenjuris"
-              disabled={submitLoading && true}
+              disabled={submitLoading ? true : false}
               type="submit"
               size="lg"
             >
               S'inscrire
             </Button>
-            {/* <Button
-              variant="ghost"
-              className="border border-lumenjuris text-lumenjuris"
-            >
-              <span className="text-[20px]">
-                {" "}
-                <FcGoogle />
-              </span>{" "}
-            </Button> */}
             <button className="w-full h-10 border border-lumenjuris text-[20px] flex justify-center items-center gap-2 rounded-md text-lumenjuris">
               <FcGoogle />
               <span className="text-[14px]">Se connecter avec Google</span>

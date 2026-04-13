@@ -39,15 +39,12 @@ const LoginForm = ({
 }: LoginFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!email || !password) {
-      <AlertBanner
-        title="Vérifiez votre email et votre mot de passe"
-        variant="error"
-        onClose={() => {}}
-      />;
+      setSubmitError(true);
     }
     console.log(event);
   };
@@ -70,39 +67,29 @@ const LoginForm = ({
   };
 
   return (
-    <section className="flex flex-col">
+    <section className="flex flex-col gap-5">
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-6">
           <div className="grid gap-2">
             <Field>
-              <FieldLabel htmlFor="email">
-                <span className="after:ml-0.5 after:text-red-500 after:content-['*']">
-                  Email
-                </span>
-              </FieldLabel>
+              <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
                 id="email"
                 type="email"
-                placeholder="mail@example.com"
-                required
-                pattern="/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/"
+                placeholder="Saisissez votre email de connexion"
                 onChange={handleChangeEmail}
               />
             </Field>
           </div>
+
           <div className="grid gap-2">
             <Field className="max-w-sm">
-              <FieldLabel htmlFor="password">
-                <span className="after:ml-0.5 after:text-red-500 after:content-['*']">
-                  Password
-                </span>
-              </FieldLabel>
+              <FieldLabel htmlFor="password">Password</FieldLabel>
               <InputGroup>
                 <InputGroupInput
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Choisissez un mot de passe"
-                  required
+                  placeholder="Saisissez votre mot de passe"
                   onChange={handleChangePassword}
                 />
                 <InputGroupAddon
@@ -127,15 +114,6 @@ const LoginForm = ({
             >
               Se connecter
             </Button>
-            {/* <Button
-              variant="ghost"
-              className="border border-lumenjuris text-lumenjuris"
-            >
-              <span className="text-[20px]">
-                {" "}
-                <FcGoogle />
-              </span>{" "}
-            </Button> */}
             <button className="w-full h-10 border border-lumenjuris text-[20px] flex justify-center items-center gap-2 rounded-md text-lumenjuris">
               <FcGoogle />
               <span className="text-[14px]">Se connecter avec Google</span>
@@ -143,6 +121,16 @@ const LoginForm = ({
           </div>
         </div>
       </form>
+      {submitError && (
+        <AlertBanner
+          title="Champs manquants"
+          variant="error"
+          detail="Vérifiez votre email et votre mot de passe"
+          onClose={() => {
+            setSubmitError(false);
+          }}
+        />
+      )}
     </section>
   );
 };
