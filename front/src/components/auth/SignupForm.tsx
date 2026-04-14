@@ -17,7 +17,7 @@ import {
 import { Separator } from "../ui/Separator";
 import { Checkbox } from "../ui/Checkbox";
 import { Label } from "../ui/Label";
-import { EyeOffIcon, EyeIcon } from "lucide-react";
+import { EyeOffIcon, EyeIcon, PenBoxIcon } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 
 import { AlertBanner } from "../common/AlertBanner";
@@ -175,10 +175,11 @@ const SignupForm = ({
         <section className="flex flex-col gap-6">
           <div className="grid gap-2">
             <Field>
-              <FieldLabel htmlFor="lastname">
-                <span className="after:ml-0.5 after:text-red-500 after:content-['*']">
-                  Nom
-                </span>
+              <FieldLabel
+                htmlFor="lastname"
+                className="after:text-red-500 after:content-['*']"
+              >
+                Nom
               </FieldLabel>
               <Input
                 id="lastname"
@@ -205,10 +206,11 @@ const SignupForm = ({
 
           <div className="grid gap-2">
             <Field>
-              <FieldLabel htmlFor="email">
-                <span className="after:ml-0.5 after:text-red-500 after:content-['*']">
-                  Email
-                </span>
+              <FieldLabel
+                htmlFor="email"
+                className="after:text-red-500 after:content-['*']"
+              >
+                Email
               </FieldLabel>
               <Input
                 id="email"
@@ -230,10 +232,11 @@ const SignupForm = ({
 
           <div className="grid gap-2">
             <Field className="max-w-sm">
-              <FieldLabel htmlFor="password">
-                <span className="after:ml-0.5 after:text-red-500 after:content-['*']">
-                  Password
-                </span>
+              <FieldLabel
+                htmlFor="password"
+                className="after:text-red-500 after:content-['*']"
+              >
+                Password
               </FieldLabel>
               <InputGroup
                 className={
@@ -267,10 +270,11 @@ const SignupForm = ({
 
           <div className="grid gap-2">
             <Field className="max-w-sm">
-              <FieldLabel htmlFor="confirmpassword">
-                <span className="after:ml-0.5 after:text-red-500 after:content-['*']">
-                  Confirm password
-                </span>
+              <FieldLabel
+                htmlFor="confirmpassword"
+                className="after:text-red-500 after:content-['*']"
+              >
+                Confirm password
               </FieldLabel>
               <InputGroup
                 className={
@@ -335,24 +339,21 @@ const SignupForm = ({
                   }}
                   className="border-ring"
                 />
-                <FieldContent>
-                  <FieldLabel htmlFor="terms-checkbox-desc">
-                    Accepter nos{" "}
-                    <a
-                      href="https://www.lumenjuris.com/conditions-generales-dutilisation/"
-                      className="hover:cursor-pointer underline"
-                    >
-                      <span>CGU</span>
-                    </a>
-                    <span className="text-red-500">*</span>
-                  </FieldLabel>
-                </FieldContent>
+                <FieldDescription className="after:ml-1 after:text-red-500 after:content-['*']">
+                  Accepter nos{" "}
+                  <a
+                    href="https://www.lumenjuris.com/conditions-generales-dutilisation/"
+                    className="hover:cursor-pointer underline"
+                  >
+                    <span>CGU</span>
+                  </a>
+                </FieldDescription>
               </Field>
             </FieldGroup>
           </div>
 
           <div className="grid gap-2">
-            <span className="before:mr-0.5 before:text-red-500 before:content-['*'] text-[14px] text-gray-500">
+            <span className="before:mr-1 before:text-red-500 before:content-['*'] text-[14px] text-gray-500">
               Champs obligatoires.
             </span>
           </div>
@@ -374,6 +375,7 @@ const SignupForm = ({
               type="submit"
               size="lg"
             >
+              <PenBoxIcon />
               S'inscrire
             </Button>
             <button className="w-full h-10 border border-lumenjuris text-sm font-medium inline-flex justify-center items-center gap-2 rounded-md text-lumenjuris">

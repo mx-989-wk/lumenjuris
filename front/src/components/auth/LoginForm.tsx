@@ -2,22 +2,8 @@
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/InputGroup";
-import {
-  Field,
-  FieldLabel,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLegend,
-  FieldSeparator,
-  FieldSet,
-  FieldContent,
-  FieldTitle,
-} from "../ui/Field";
-import { Separator } from "../ui/Separator";
-import { Checkbox } from "../ui/Checkbox";
-import { Label } from "../ui/Label";
-import { EyeOffIcon, EyeIcon, SendIcon } from "lucide-react";
+import { Field, FieldLabel, FieldDescription } from "../ui/Field";
+import { EyeOffIcon, EyeIcon, SendIcon, LogInIcon } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 
 import { AlertBanner } from "../common/AlertBanner";
@@ -73,6 +59,7 @@ const LoginForm = ({
       setSubmitForgotError(true);
     } else {
       setEmailSent(true);
+      setForgotPassword(false);
     }
   };
 
@@ -118,11 +105,12 @@ const LoginForm = ({
       )}
       {emailSent === true ? (
         <AlertBanner
-          title="Demande envoyée !"
+          title="Votre demande est prise en compte"
           variant="success"
-          detail="Un email avec un lien de réinitialisation à été envoyé à votre adresse email"
+          detail="Si un compte associé à cette adresse email existe vous allez recevoir un lien pour réinitialiser votre mot de passe"
+          duration={9000}
           onClose={() => {
-            setForgotPassword(true);
+            setEmailSent(false);
           }}
         />
       ) : (
@@ -131,63 +119,43 @@ const LoginForm = ({
 
       {forgotPassword === true ? (
         <div className="flex flex-col gap-6">
-          {emailSent === true ? (
-            <>
+          <h2>
+            Renseignez votre email de connexion pour réinitialiser votre mot de
+            passe :
+          </h2>
+          <form onSubmit={handleSubmitForgotPassword}>
+            <section className="flex flex-col gap-6">
+              <Field>
+                {/* <FieldLabel htmlFor="email">Email</FieldLabel> */}
+                <FieldDescription className="text-gray-500">
+                  Un lien de réinitialisation vous sera envoyer à cette adresse
+                </FieldDescription>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Votre email de connexion"
+                  value={email}
+                  onChange={handleChangeEmail}
+                />
+              </Field>
+
               <div className="w-full h-px bg-border"></div>
 
-              <Button
-                className="text-background border border-lumenjuris"
-                size="lg"
-                onClick={() => {
-                  setForgotPassword(false);
-                  setEmailSent(false);
-                }}
-              >
-                Se connecter
-              </Button>
-            </>
-          ) : (
-            <>
-              <h2>
-                Renseignez votre email de connexion pour réinitialiser votre mot
-                de passe :
-              </h2>
-              <form onSubmit={handleSubmitForgotPassword}>
-                <section className="flex flex-col gap-6">
-                  <Field>
-                    {/* <FieldLabel htmlFor="email">Email</FieldLabel> */}
-                    <FieldDescription className="text-gray-500">
-                      Un lien de réinitialisation vous sera envoyer à cette
-                      adresse
-                    </FieldDescription>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Votre email de connexion"
-                      value={email}
-                      onChange={handleChangeEmail}
-                    />
-                  </Field>
-
-                  <div className="w-full h-px bg-border"></div>
-
-                  <div className="grid gap-2">
-                    <Button
-                      className="text-background border border-lumenjuris"
-                      disabled={
-                        submitLoading ? true : submitForgotError ? true : false
-                      }
-                      type="submit"
-                      size="lg"
-                    >
-                      Envoyer
-                      <SendIcon />
-                    </Button>
-                  </div>
-                </section>
-              </form>
-            </>
-          )}
+              <div className="grid gap-2">
+                <Button
+                  className="text-background border border-lumenjuris"
+                  disabled={
+                    submitLoading ? true : submitForgotError ? true : false
+                  }
+                  type="submit"
+                  size="lg"
+                >
+                  Envoyer
+                  <SendIcon />
+                </Button>
+              </div>
+            </section>
+          </form>
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
@@ -236,6 +204,7 @@ const LoginForm = ({
                 type="submit"
                 size="lg"
               >
+                <LogInIcon />
                 Se connecter
               </Button>
               <button className="w-full h-10 border border-lumenjuris text-sm font-medium inline-flex justify-center items-center gap-2 rounded-md text-lumenjuris">

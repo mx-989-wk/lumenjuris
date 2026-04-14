@@ -113,8 +113,9 @@ export function MainLayout() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <HeaderNavigationBar />
+          <HeaderNavigationBar />
+          {/* <div className="flex items-center gap-3">
+            
             <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
               <Bell className="h-5 w-5 text-gray-400" />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-green-500" />
@@ -130,7 +131,7 @@ export function MainLayout() {
                 <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
               </div>
             </div>
-          </div>
+          </div> */}
         </header>
 
         {/* Page content via nested routes */}
