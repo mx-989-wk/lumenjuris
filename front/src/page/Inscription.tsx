@@ -29,11 +29,8 @@ export function Inscription() {
                 <Button
                   variant="default"
                   size="lg"
-                  className={
-                    isLoginOnScreen
-                      ? "w-full bg-lumenjuris/80 text-white hover:cursor-default"
-                      : "w-full bg-lumenjuris-background text-lumenjuris hover:text-white"
-                  }
+                  className="w-full bg-lumenjuris-background text-lumenjuris hover:text-white hover:bg-primary/90 disabled:bg-primary disabled:text-white disabled:opacity-80"
+                  disabled={isLoginOnScreen ? true : false}
                   onClick={() => {
                     setIsLoginOnScreen(true);
                   }}
@@ -46,11 +43,8 @@ export function Inscription() {
                 <Button
                   variant="default"
                   size="lg"
-                  className={
-                    isLoginOnScreen
-                      ? "w-full bg-lumenjuris-background text-lumenjuris hover:text-white"
-                      : "w-full bg-lumenjuris/80 text-white hover:cursor-default"
-                  }
+                  className="w-full bg-lumenjuris-background text-lumenjuris hover:text-white hover:bg-primary/90 disabled:bg-primary disabled:text-white disabled:opacity-80"
+                  disabled={isLoginOnScreen ? false : true}
                   onClick={() => {
                     setIsLoginOnScreen(false);
                   }}
