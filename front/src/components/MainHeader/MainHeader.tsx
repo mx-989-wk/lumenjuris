@@ -46,7 +46,7 @@ const MainHeader = ({
               className="flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-lumenjuris-background rounded-lg transition-colors"
               title="Réanalyser le document"
             >
-              <RefreshCw className="size-6" />
+              <RefreshCw className="size-5" />
             </button>
           )}
         </section>
