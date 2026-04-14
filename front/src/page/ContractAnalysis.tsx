@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { Header } from "../components/ContractAnalysis/Header";
 import { UploadZone } from "../components/ContractAnalysis/UploadZone";
 import {
   DocumentViewer,
   DocumentViewerRef,
 } from "../components/ContractAnalysis/DocumentViewer";
+
+import MainHeader from "../components/MainHeader/MainHeader";
 
 // ===> ACTION 3 : CORRIGER L'IMPORT ICI
 import {
@@ -108,8 +109,6 @@ export default function ContractAnalysis() {
   const handleCloseModal = () => {
     setSelectedClause(null);
   };
-
-
 
   const handleNewAnalysis = () => {
     console.log("🔄 Début de la nouvelle analyse");
@@ -228,8 +227,8 @@ export default function ContractAnalysis() {
   };
 
   // Fonction pour retourner à l'accueil
-  const handleLogoClick = () => {
-    console.log("🏠 Retour à l'accueil");
+  const handleNavClick = () => {
+    console.log("⚙️ Réinitialisation analyzer");
 
     // Réinitialiser les recommandations appliquées
     resetAllPatches();
@@ -246,8 +245,8 @@ export default function ContractAnalysis() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header
-        onLogoClick={handleLogoClick}
+      <MainHeader
+        onNavClick={handleNavClick}
         onReanalyze={handleNewAnalysis}
         showReanalyze={!!contract}
       />

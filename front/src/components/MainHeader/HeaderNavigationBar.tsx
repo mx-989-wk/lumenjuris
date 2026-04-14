@@ -4,7 +4,11 @@ import { Button } from "../ui/Button";
 
 import { Link, useLocation } from "react-router-dom";
 
-const HeaderNavigationBar = () => {
+interface HeaderNavBarProps {
+  onNavClick?: () => void;
+}
+
+const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
   const { pathname } = useLocation();
 
   return (
@@ -18,6 +22,7 @@ const HeaderNavigationBar = () => {
               ? " text-gray-500 tracking-wide font-semibold text-[16px] hover:cursor-default"
               : "text-gray-400"
           }
+          onClick={onNavClick}
         >
           <LogInIcon />
           Se connecter
@@ -30,7 +35,7 @@ const HeaderNavigationBar = () => {
           data-slot="icon"
           className={
             pathname === "/analyzer"
-              ? "bg-lumenjuris text-lumenjuris-background tracking-wide font-semibold"
+              ? " text-gray-500 tracking-wide font-semibold text-[16px] hover:cursor-default"
               : "text-gray-400"
           }
         >
@@ -44,9 +49,10 @@ const HeaderNavigationBar = () => {
           size="lg"
           className={
             pathname === "/mon-compte"
-              ? "bg-lumenjuris text-lumenjuris-background tracking-wide font-semibold"
+              ? " text-gray-500 tracking-wide font-semibold text-[16px] hover:cursor-default"
               : "text-gray-400"
           }
+          onClick={onNavClick}
         >
           <User />
           Mon compte
@@ -57,10 +63,11 @@ const HeaderNavigationBar = () => {
           variant="ghost"
           size="lg"
           className={
-            pathname === "/mon-compte"
-              ? "bg-lumenjuris text-lumenjuris-background tracking-wide font-semibold"
+            pathname === "/sandbox"
+              ? " text-gray-500 tracking-wide font-semibold text-[16px] hover:cursor-default"
               : "text-gray-400"
           }
+          onClick={onNavClick}
         >
           <ScatterChartIcon />
           Sandbox
