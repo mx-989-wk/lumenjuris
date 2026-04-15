@@ -66,6 +66,8 @@ const SignupForm = ({
 
   const [submitError, setSubmitError] = useState(false);
   const [submitCguError, setSubmitCguError] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [serverError, setServerError] = useState(false);
 
   const passwordErrorTimeout = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -75,12 +77,35 @@ const SignupForm = ({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const signupRequest = new Request("/api/signup", {
+      method: "POST",
+      body: JSON.stringify({
+        lastName: { lastName },
+        firstName: { firstName },
+        email: { email },
+        password: { password },
+        siren: { siren },
+        acceptCgu: { acceptCgu },
+      }),
+    });
+
     if (!lastName || !email || !password) {
       setSubmitError(true);
     } else if (acceptCgu === false) {
       setSubmitCguError(true);
     } else {
       setSubmitLoading(true);
+      try {
+        const signupResponse = await fetch(signupRequest);
+        console.log("▶️▶️ RETOUR SERVEUR INSCRIPTION :", signupResponse);
+        if (!signupResponse.ok) {
+          setServerError(true);
+          throw new Error(`BackNode Error : ${signupResponse.status}`);
+        } else {
+          setSubmitSuccess(true);
+        }
+      } catch (error) {}
     }
   };
 
@@ -167,6 +192,30 @@ const SignupForm = ({
           detail="Vous devez acceptez nos CGU"
           onClose={() => {
             setSubmitCguError(false);
+          }}
+        />
+      )}
+
+      {serverError && (
+        <AlertBanner
+          title="Erreur serveur"
+          variant="error"
+          detail="Une erreur s'est produite, veuillez réessayer"
+          onClose={() => {
+            setServerError(false);
+            setSubmitLoading(false);
+          }}
+        />
+      )}
+      {submitSuccess && (
+        <AlertBanner
+          title="Inscription réussie !"
+          variant="success"
+          detail="Votre compte a bien été créé"
+          onClose={() => {
+            setSubmitSuccess(false);
+            setSubmitLoading(false);
+            navigate("/dashboard");
           }}
         />
       )}

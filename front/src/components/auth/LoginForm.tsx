@@ -9,6 +9,7 @@ import { FcGoogle } from "react-icons/fc";
 import { AlertBanner } from "../common/AlertBanner";
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 //  forgotPassword={forgotPassword}
 //                   setForgotPassword={setForgotPassword}
@@ -38,16 +39,41 @@ const LoginForm = ({
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState(false);
   const [submitForgotError, setSubmitForgotError] = useState(false);
+  const [serverError, setServerError] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     setForgotPassword(false);
     setEmailSent(false);
   }, []);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const loginRequest = new Request("/api/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: { email },
+        password: { password },
+      }),
+    });
+
     if (!email || !password) {
       setSubmitError(true);
+    } else {
+      setSubmitLoading(true);
+      try {
+        const loginResponse = await fetch(loginRequest);
+        console.log("▶️▶️ RETOUR SERVEUR CONNEXION :", loginResponse);
+        if (!loginResponse.ok) {
+          setServerError(true);
+          throw new Error(`BackNode Error : ${loginResponse.status}`);
+        } else {
+          setSubmitLoading(false);
+          navigate("/dashboard");
+        }
+      } catch (error) {}
     }
   };
 
@@ -103,6 +129,19 @@ const LoginForm = ({
           }}
         />
       )}
+
+      {serverError && (
+        <AlertBanner
+          title="Erreur serveur"
+          variant="error"
+          detail="Une erreur s'est produite, veuillez réessayer"
+          onClose={() => {
+            setServerError(false);
+            setSubmitLoading(false);
+          }}
+        />
+      )}
+
       {emailSent === true ? (
         <AlertBanner
           title="Votre demande est prise en compte"
