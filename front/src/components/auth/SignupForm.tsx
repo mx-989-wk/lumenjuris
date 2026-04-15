@@ -78,18 +78,6 @@ const SignupForm = ({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const signupRequest = new Request("/api/signup", {
-      method: "POST",
-      body: JSON.stringify({
-        lastName: { lastName },
-        firstName: { firstName },
-        email: { email },
-        password: { password },
-        siren: { siren },
-        acceptCgu: { acceptCgu },
-      }),
-    });
-
     if (!lastName || !email || !password) {
       setSubmitError(true);
     } else if (acceptCgu === false) {
@@ -97,15 +85,31 @@ const SignupForm = ({
     } else {
       setSubmitLoading(true);
       try {
-        const signupResponse = await fetch(signupRequest);
-        console.log("▶️▶️ RETOUR SERVEUR INSCRIPTION :", signupResponse);
+        const signupResponse = await fetch(`http://localhost:5173/api/signup`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            nom: lastName,
+            prenom: firstName,
+            password: password,
+            cgu: acceptCgu,
+          }),
+        });
+        const data = await signupResponse.json();
+        console.log("▶️▶️ RETOUR PROXY INSCRIPTION :", data);
         if (!signupResponse.ok) {
           setServerError(true);
           throw new Error(`BackNode Error : ${signupResponse.status}`);
         } else {
           setSubmitSuccess(true);
         }
-      } catch (error) {}
+      } catch (error) {
+        setServerError(true);
+        console.log("🛑🛑🛑 ERREUR SERVEUR INSCRIPTION", error);
+      }
     }
   };
 
@@ -211,7 +215,7 @@ const SignupForm = ({
         <AlertBanner
           title="Inscription réussie !"
           variant="success"
-          detail="Votre compte a bien été créé"
+          detail="Votre compte a bien été créé, un email de confirmation vous a été envoyé"
           onClose={() => {
             setSubmitSuccess(false);
             setSubmitLoading(false);

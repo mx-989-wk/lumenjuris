@@ -15,7 +15,7 @@ dotenv.config();
 
 const app = express();
 
-//Cord adapté pour prod
+//Cors adapté pour prod
 app.use(
   cors({
     origin: [
@@ -181,5 +181,10 @@ if (IS_PROD) {
 }
 
 // BackNode - Requêtes connexions
+app.post("/api/signup", (req: Request, res: Response) => {
+  // console.log("🛑🛑 REQ FORMAT :", req.body);
+  // relayToNode(req, res, "/user/create");
+  return res.status(200).json({ message: "Hello" });
+  // res.send("coucou");
+});
 app.post("/api/login", (req: Request, res: Response) => {});
-app.post("/api/signup", (req: Request, res: Response) => {});
