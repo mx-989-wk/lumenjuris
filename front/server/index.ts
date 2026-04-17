@@ -110,23 +110,57 @@ function relayToNode(req: Request, res: Response, targetPath: string): void {
     });
 }
 
-// Multipart (upload PDF) — stream direct, body non consommé par express.json
-app.post('/extract-pdf-text', (req: Request, res: Response) => relayStreamToPython(req, res, '/extract-pdf-text'));
+function handleExtractPdfText(req: Request, res: Response): void {
+  relayStreamToPython(req, res, '/extract-pdf-text');
+}
 
-// JSON routes — body déjà parsé par express.json
-app.post(['/legifrance-search', '/api/legifrance-search'], (req: Request, res: Response) => relayJsonToPython(req, res, '/legifrance-search'));
-app.post(['/jurisprudence', '/api/jurisprudence'], (req: Request, res: Response) => relayJsonToPython(req, res, '/jurisprudence'));
-app.post(['/analyze-clause', '/api/analyze-clause'], (req: Request, res: Response) => relayJsonToPython(req, res, '/analyze-clause'));
-app.post(['/api/chat', '/chat'], (req: Request, res: Response) => relayJsonToPython(req, res, '/chat'));
-app.post(['/api/openai-chat', '/openai-chat'], (req: Request, res: Response) => relayJsonToPython(req, res, '/openai-chat'));
-app.post(['/api/openai-chat-5', '/openai-chat-5'], (req: Request, res: Response) => relayJsonToPython(req, res, '/openai-chat-5'));
-app.post(['/api/huggingface-generate', '/huggingface-generate'], (req: Request, res: Response) => relayJsonToPython(req, res, '/huggingface-generate'));
+function handleLegifranceSearch(req: Request, res: Response): void {
+  relayJsonToPython(req, res, '/legifrance-search');
+}
 
-// Node - Requêtes INSEE
-app.get('/api/insee/:siren', (req: Request, res: Response) => {
+function handleJurisprudence(req: Request, res: Response): void {
+  relayJsonToPython(req, res, '/jurisprudence');
+}
+
+function handleAnalyzeClause(req: Request, res: Response): void {
+  relayJsonToPython(req, res, '/analyze-clause');
+}
+
+function handleChat(req: Request, res: Response): void {
+  relayJsonToPython(req, res, '/chat');
+}
+
+function handleOpenAiChat(req: Request, res: Response): void {
+  relayJsonToPython(req, res, '/openai-chat');
+}
+
+function handleOpenAiChat5(req: Request, res: Response): void {
+  relayJsonToPython(req, res, '/openai-chat-5');
+}
+
+function handleHuggingFaceGenerate(req: Request, res: Response): void {
+  relayJsonToPython(req, res, '/huggingface-generate');
+}
+
+function handleInseeRequest(req: Request, res: Response): void {
   const siren = encodeURIComponent(req.params.siren);
   relayToNode(req, res, `/enterprise/insee/${siren}`);
-});
+}
+
+// Multipart (upload PDF) — stream direct, body non consommé par express.json
+app.post('/extract-pdf-text', handleExtractPdfText);
+
+// JSON routes — body déjà parsé par express.json
+app.post(['/legifrance-search', '/api/legifrance-search'], handleLegifranceSearch);
+app.post(['/jurisprudence', '/api/jurisprudence'], handleJurisprudence);
+app.post(['/analyze-clause', '/api/analyze-clause'], handleAnalyzeClause);
+app.post(['/api/chat', '/chat'], handleChat);
+app.post(['/api/openai-chat', '/openai-chat'], handleOpenAiChat);
+app.post(['/api/openai-chat-5', '/openai-chat-5'], handleOpenAiChat5);
+app.post(['/api/huggingface-generate', '/huggingface-generate'], handleHuggingFaceGenerate);
+
+// Node - Requêtes INSEE
+app.get('/api/insee/:siren', handleInseeRequest);
 
 // ---- Front React : Vite middleware (dev) ou static (prod) ---------------------
 if (IS_PROD) {
