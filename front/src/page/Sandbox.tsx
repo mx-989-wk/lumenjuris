@@ -46,6 +46,8 @@ export function Sandbox() {
   const [inseeSiren, setInseeSiren] = useState("940468606");
   const [inseeLoading, setInseeLoading] = useState(false);
   const [inseeResult, setInseeResult] = useState<string>("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authResult, setAuthResult] = useState<string>("");
 
   const spawn = (preset: typeof PRESETS[number]) => {
     setBanners((prev) => [...prev, {
@@ -91,6 +93,67 @@ export function Sandbox() {
       }, null, 2));
     } finally {
       setInseeLoading(false);
+    }
+  };
+
+  const testAuth = async (action: "login" | "logout") => {
+    try {
+      setAuthLoading(true);
+      setAuthResult("");
+
+      const response = await fetch(
+        action === "login" ? "/api/user/auth/login" : "/api/user/auth/logout",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body:
+            action === "login"
+              ? JSON.stringify({
+                  email: "test@lumenjuris.local",
+                  password: "password123",
+                })
+              : undefined,
+        },
+      );
+
+      const rawText = await response.text();
+
+      let parsed: unknown = null;
+      try {
+        parsed = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        parsed = null;
+      }
+
+      setAuthResult(
+        JSON.stringify(
+          {
+            action,
+            ok: response.ok,
+            status: response.status,
+            statusText: response.statusText,
+            body: parsed ?? rawText ?? "",
+          },
+          null,
+          2,
+        ),
+      );
+    } catch (error) {
+      setAuthResult(
+        JSON.stringify(
+          {
+            action,
+            error: error instanceof Error ? error.message : String(error),
+          },
+          null,
+          2,
+        ),
+      );
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -165,6 +228,33 @@ export function Sandbox() {
               onClose={() => dismiss(b.id)}
             />
           ))}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-base font-semibold text-gray-800">Test Auth</h2>
+
+        <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => testAuth("login")}
+              disabled={authLoading}
+              className="text-sm px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-400 transition-colors bg-white text-gray-700 disabled:opacity-50"
+            >
+              {authLoading ? "Chargement..." : "Login user test"}
+            </button>
+            <button
+              onClick={() => testAuth("logout")}
+              disabled={authLoading}
+              className="text-sm px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-400 transition-colors bg-white text-gray-700 disabled:opacity-50"
+            >
+              {authLoading ? "Chargement..." : "Logout"}
+            </button>
+          </div>
+
+          <pre className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 overflow-auto whitespace-pre-wrap">
+            {authResult || "Le résultat du test auth s'affichera ici."}
+          </pre>
         </div>
       </section>
 

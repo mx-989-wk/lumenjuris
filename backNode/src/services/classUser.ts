@@ -1,110 +1,110 @@
 import { prisma } from "../../prisma/singletonPrisma"
 import bcrypt from "bcrypt"
+import { formatCompanyProfile } from "./classEnterprise"
 
-type createDataDTO = {
+type CreateDataDTO = {
     email: string
     nom?: string
     prenom?: string
-    password?: string,
+    password?: string
     cgu: boolean
 }
 
 type UserAuthData = {
-    idUser: number;
-    email: string;
-    role: string;
-    isVerified: boolean;
-};
+    idUser: number
+    email: string
+    role: string
+    isVerified: boolean
+}
 
-type dataUpdatedDTO = {
+type DataUpdatedDTO = {
     email?: string
     nom?: string
     prenom?: string
     password?: string
 }
 
-type returnData<T = any> = {
+type ReturnData<T = any> = {
     success: boolean
     message?: string
     data?: T
 }
 
-
-
 export class User {
-
-    //Cacthing d'erreur global 
     private errorCatching(err: unknown, fn: string): { success: boolean, message: string } {
-        const e = err as any;
+        const e = err as any
 
-        console.error(`Erreur dans la fonction ${fn} : \n\n`, err);
+        console.error(`Erreur dans la fonction ${fn} : \n\n`, err)
 
-        //object des erreur de contrainte
         const constraintMap: Record<string, string> = {
             User_email_key: "Cet email est déjà utilisé.",
         }
 
-        //Erreur de contrainte
         if (e?.code === "P2002") {
-            const message: string = e?.message || "";
-            //Gestion erreur champ unique non respecté
+            const message: string = e?.message || ""
+
             for (const key in constraintMap) {
                 if (message.includes(key)) {
                     return {
                         success: false,
                         message: constraintMap[key],
-                    };
+                    }
                 }
             }
 
             return {
                 success: false,
                 message: "Une valeur unique est déjà utilisée.",
-            };
+            }
         }
 
         if (e?.code === "P2005") {
             return {
                 success: false,
-                message: "Aucun compte utilisateur n'a été retrouvé."
+                message: "Aucun compte utilisateur n'a été retrouvé.",
             }
         }
 
         return {
             success: false,
             message: "Une erreur est survenue avec le serveur, merci de réessayer plus tard.",
-        };
+        }
     }
 
-
-    //Hash d'un password avec bcrypt
     private async hashPassword(password: string): Promise<string> {
-        const saltRound = 10;
+        const saltRound = 10
         const salt = await bcrypt.genSalt(saltRound)
         const passwordHash = await bcrypt.hash(password, salt)
         return passwordHash
     }
 
+    // Charge la ligne utilisateur avec sa relation entreprise, utile pour les écrans profil.
+    private async findById(idUser: number) {
+        return prisma.user.findUnique({
+            where: { idUser },
+            include: {
+                enterprise: {
+                    include: {
+                        address: true,
+                    },
+                },
+            },
+        })
+    }
 
-    //Création d'un nouvel utilisateur dans la bdd
-    async create(data: createDataDTO) {
+    async create(data: CreateDataDTO): Promise<ReturnData> {
         try {
             const { email, nom, prenom, password, cgu } = data
-            if (!password) {
-                return {
-                    success: false,
-                    message: "Un mot de passe est requit pour la création d'un compte utilisateur."
-                }
-            }
-            const passwordHash = await this.hashPassword(password)
+            const passwordHash = password ? await this.hashPassword(password) : null
+
             const newUser = await prisma.user.create({
                 data: {
                     email,
                     nom,
                     prenom,
                     password: passwordHash,
-                    cgu
-                }
+                    cgu,
+                },
             })
 
             console.log("New user create with prisma : ", newUser)
@@ -118,18 +118,20 @@ export class User {
         }
     }
 
-
-    //Authentification d'un utilisateur lors d'une connexion
-    async authenticate(password: string, email: string): Promise<returnData<UserAuthData>> {
+    async authenticate(password: string, email: string): Promise<ReturnData<UserAuthData>> {
         try {
-
             const findUser = await prisma.user.findUnique({
-                where: { email }
+                where: { email },
             })
 
-            if (!findUser?.password) return { success: false, message: "Email ou mot de passe invalide" }
+            if (!findUser?.password) {
+                return {
+                    success: false,
+                    message: "Email ou mot de passe invalide",
+                }
+            }
 
-            const verifyPassword = await bcrypt.compare(password, findUser?.password)
+            const verifyPassword = await bcrypt.compare(password, findUser.password)
 
             return {
                 success: verifyPassword,
@@ -138,26 +140,27 @@ export class User {
                     email: findUser.email,
                     role: findUser.role,
                     isVerified: findUser.isVerified,
-                    idUser: findUser.idUser
-                }
+                    idUser: findUser.idUser,
+                },
             }
-
         } catch (err) {
             return this.errorCatching(err, "User.authenticate")
         }
     }
 
-
-    //Mise à jour des données d'un utilisateur
-    async update(idUser: number, dataUpdated: dataUpdatedDTO): Promise<returnData> {
+    async update(idUser: number, dataUpdated: DataUpdatedDTO): Promise<ReturnData> {
         try {
-            if (dataUpdated.password) {
-                dataUpdated.password = await this.hashPassword(dataUpdated.password)
+            const nextDataUpdated = { ...dataUpdated }
+
+            if (nextDataUpdated.password) {
+                nextDataUpdated.password = await this.hashPassword(nextDataUpdated.password)
             }
-            const userUpdated = await prisma.user.update({
-                where: { idUser: idUser },
-                data: { ...dataUpdated }
+
+            await prisma.user.update({
+                where: { idUser },
+                data: nextDataUpdated,
             })
+
             return {
                 success: true,
                 message: "Les informations ont été mises à jour",
@@ -167,23 +170,29 @@ export class User {
         }
     }
 
-    async get(idUser: number) {
+    async get(idUser: number): Promise<ReturnData> {
         try {
-            const dataUser = await prisma.user.findUnique({
-                where: { idUser }
-            })
+            const dataUser = await this.findById(idUser)
+
+            if (!dataUser) {
+                return {
+                    success: false,
+                    message: "Aucune donnée utilisateur n'a été retrouvée.",
+                }
+            }
+
             return {
                 success: true,
-                message: "Les données de l'utilisateurs ont été récupérés avec succès.",
+                message: "Les données de l'utilisateur ont été récupérées avec succès.",
                 data: {
-                    email: dataUser?.email,
-                    nom: dataUser?.nom,
-                    prenom: dataUser?.prenom,
-                    role: dataUser?.role,
-                    enterpriseId: dataUser?.enterpriseId,
-                    isVerified: dataUser?.isVerified,
-                    stripeCustomerId: dataUser?.stripeCustomerId
-                }
+                    email: dataUser.email,
+                    nom: dataUser.nom,
+                    prenom: dataUser.prenom,
+                    role: dataUser.role,
+                    isVerified: dataUser.isVerified,
+                    stripeCustomerId: dataUser.stripeCustomerId,
+                    enterprise: formatCompanyProfile(dataUser.enterprise),
+                },
             }
         } catch (err) {
             return this.errorCatching(err, "User.get")
