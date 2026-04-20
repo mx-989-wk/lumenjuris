@@ -11,6 +11,8 @@ import { AlertBanner } from "../common/AlertBanner";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { useAuth } from "../../context/AuthContext";
+
 interface LoginFormProps {
   email: string;
   setEmail: React.Dispatch<React.SetStateAction<string>>;
@@ -62,9 +64,10 @@ const LoginForm = ({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email: { email },
-            password: { password },
+            email,
+            password,
           }),
+          credentials: "include",
         });
 
         const data = await loginResponse.json();

@@ -9,6 +9,7 @@ import routerGoogleAuth from "./route/authGoogle";
 import routerLlm from "./route/apiLlm";
 import routerUser from "./route/apiUser";
 import routerEnterprise from "./route/apiEnterprise";
+import cors from "cors";
 
 /**
  * Préparation du serveur nodejs/express pour ce backend
@@ -21,6 +22,12 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:3020"],
+    credentials: true,
+  }),
+);
 
 app.use("/", routerGoogleAuth);
 app.use("/llm", routerLlm);

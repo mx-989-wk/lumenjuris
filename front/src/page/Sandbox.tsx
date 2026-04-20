@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertBanner,
@@ -6,6 +6,8 @@ import {
 } from "../components/common/AlertBanner";
 
 import MainHeader from "../components/MainHeader/MainHeader";
+
+import { AuthContext } from "../context/AuthContext";
 
 const PRESETS: {
   label: string;
@@ -52,32 +54,32 @@ const inputClass =
 export function Sandbox() {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/api/user/get", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await fetch("/api/user/get", {
+  //         method: "GET",
+  //         headers: { "Content-Type": "application/json" },
+  //       });
 
-        const dataResponse = await response.json();
-        console.log("DATA SANDBOX PAGE :", dataResponse);
-        if (
-          !dataResponse.data.profile.isVerified &&
-          dataResponse.data.profile.role != "ADMIN"
-        ) {
-          navigate("/inscription");
-        }
-        if (!dataResponse) {
-          navigate("/inscription");
-        }
-      } catch (error) {
-        console.error("🛑🛑🛑 ERREUR SERVEUR GET USER SANDBOX", error);
-        navigate("/inscription");
-      }
-    };
-    fetchData();
-  }, []);
+  //       const dataResponse = await response.json();
+  //       console.log("DATA SANDBOX PAGE :", dataResponse);
+  //       if (
+  //         !dataResponse.data.profile.isVerified &&
+  //         dataResponse.data.profile.role != "ADMIN"
+  //       ) {
+  //         navigate("/inscription");
+  //       }
+  //       if (!dataResponse) {
+  //         navigate("/inscription");
+  //       }
+  //     } catch (error) {
+  //       console.error("🛑🛑🛑 ERREUR SERVEUR GET USER SANDBOX", error);
+  //       navigate("/inscription");
+  //     }
+  //   };
+  //   fetchData();
+  // }, []);
 
   const [banners, setBanners] = useState<
     {

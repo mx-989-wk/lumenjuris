@@ -23,21 +23,24 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
+import { useAuth } from "../../context/AuthContext";
+
 interface HeaderNavBarProps {
   onNavClick?: () => void;
 }
 
+type UserDataProfile = {
+  email: string;
+  nom: string;
+  prenom?: string;
+  role: "USER" | "ADMIN";
+  isVerified: boolean;
+};
+
 const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-
-  type UserDataProfile = {
-    email: string;
-    nom: string;
-    prenom?: string;
-    role: "USER" | "ADMIN";
-    isVerified: boolean;
-  };
+  const { login, logout } = useAuth();
 
   const [isConnected, setIsConnected] = useState(false);
   const [userData, setUserData] = useState({} as UserDataProfile);
@@ -57,6 +60,11 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
           setIsConnected(true);
           setUserData(dataResponse.data.profile);
           setUserAvatarUrl(dataResponse.data.provider.avatarUrl);
+          login(
+            dataResponse.data.profile.role,
+            dataResponse.data.profile.isVerified,
+            true,
+          );
         } else {
           setIsConnected(false);
         }
@@ -74,11 +82,13 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
         const response = await fetch("/api/user/logout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
         });
         const logoutResponse = await response.json();
         console.log("LOGOUT RES : ", logoutResponse);
         if (logoutResponse.success) {
           setIsConnected(false);
+          logout();
           alert(logoutResponse.message);
           // navigate("/inscription");
         } else {

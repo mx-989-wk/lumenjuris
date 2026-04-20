@@ -142,16 +142,27 @@ routerUser.post(
   authMiddleware,
   (_req: Request, res: Response) => {
     try {
-      res.clearCookie("authLumenJuris", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
+      // res.cookie("authLumenJuris", "", {
+      //   httpOnly: true,
+      //   secure: process.env.ENV === "production",
+      //   sameSite: "strict",
+      //   path: "/",
+      //   maxAge: 0,
+      // });
+      // console.log("RES COOKIE: ", res.cookie);
 
-      return res.status(200).json({
-        success: true,
-        message: "L'utilisateur a été déconnecté avec succès.",
-      });
+      return res
+        .cookie("authLumenJuris", "", {
+          httpOnly: true,
+          secure: process.env.ENV === "production",
+          sameSite: "strict",
+          path: "/",
+          maxAge: 0,
+        })
+        .json({
+          success: true,
+          message: "L'utilisateur a été déconnecté avec succès.",
+        });
     } catch (err) {
       console.error(
         `Une erreur est survenue lors de la déconnexion d'un utilisateur, error : \n ${err}`,
@@ -173,6 +184,7 @@ routerUser.post("/auth/login", async (req: Request, res: Response) => {
   try {
     const { password, email } = req.body;
     const logUser = await new User().authenticate(password, email);
+    console.log("EMAIL FROM LOGIN:", email);
 
     if (!logUser.success) {
       return res.status(401).json({
@@ -182,14 +194,24 @@ routerUser.post("/auth/login", async (req: Request, res: Response) => {
     }
 
     if (logUser.success && logUser.data) {
+      console.log("🛑🛑🛑");
       createCookieAuth(logUser.data.idUser, "USER", res);
     }
 
-    return res.status(logUser.success ? 200 : 400).json({
-      success: logUser.success,
-      message: logUser.message,
-      data: logUser.data ? logUser.data : null,
-    });
+    return res
+      .status(logUser.success ? 200 : 400)
+      .cookie("authLumenJuris", "abcdbla", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 jours
+      })
+      .json({
+        success: logUser.success,
+        message: logUser.message,
+        data: logUser.data ? logUser.data : null,
+      });
   } catch (err) {
     console.error(
       `Une erreur est survenue lors de la connexion d'un utilisateur : \n ${err}`,
