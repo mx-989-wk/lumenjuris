@@ -79,7 +79,7 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
   const handleUserLogout = () => {
     const fetchLogout = async () => {
       try {
-        const response = await fetch("/api/user/logout", {
+        const response = await fetch("/api/user/auth/logout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -89,8 +89,8 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
         if (logoutResponse.success) {
           setIsConnected(false);
           logout();
-          alert(logoutResponse.message);
-          // navigate("/inscription");
+          //alert(logoutResponse.message);
+          navigate("/inscription");
         } else {
           alert(logoutResponse.message);
         }
@@ -127,7 +127,7 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
                             : pathname === "/conformite"
                               ? " text-gray-500 tracking-wide font-semibold text-[16px] hover:cursor-default"
                               : "text-gray-400 hover:bg-lumenjuris-background"
-              }
+            }
             >
               <LayoutDashboard />
               Mon workspace
