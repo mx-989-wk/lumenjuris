@@ -20,7 +20,6 @@ function normalizePreferenceUI(input: unknown) {
             dyslexicMode: false,
         }
     }
-
     const candidate = input as { dyslexicMode?: unknown }
 
     return {
@@ -32,7 +31,6 @@ function normalizePreferenceUI(input: unknown) {
 
 
 routerUser.post("/create", async (req: Request, res: Response) => {
-
     try {
         const { email, nom, prenom, password, cgu, enterprise } = req.body
 

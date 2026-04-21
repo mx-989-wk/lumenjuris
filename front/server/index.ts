@@ -151,6 +151,9 @@ function handleHuggingFaceGenerate(req: Request, res: Response): void {
   relayJsonToPython(req, res, '/huggingface-generate');
 }
 
+
+
+
 function handleInseeRequest(req: Request, res: Response): void {
   const siren = encodeURIComponent(req.params.siren);
   relayToNode(req, res, `/enterprise/insee/${siren}`);
@@ -196,6 +199,10 @@ function handleNodeEnterpriseUpdate(req: Request, res: Response): void {
   relayToNode(req, res, '/enterprise');
 }
 
+function handleSignUpUser(req:Request, res:Response):void{
+  relayToNode(req,res, "/user/create");
+}
+
 // Multipart (upload PDF) — stream direct, body non consommé par express.json
 app.post('/extract-pdf-text', handleExtractPdfText);
 
@@ -208,7 +215,9 @@ app.post(['/api/openai-chat', '/openai-chat'], handleOpenAiChat);
 app.post(['/api/openai-chat-5', '/openai-chat-5'], handleOpenAiChat5);
 app.post(['/api/huggingface-generate', '/huggingface-generate'], handleHuggingFaceGenerate);
 
+
 // Node - Requêtes Backend
+app.post('/api/signup', handleSignUpUser )
 app.get('/api/insee/:siren', handleInseeRequest);
 app.get('/api/user/get', handleNodeUserGet);
 app.put('/api/user', handleNodeUserUpdate);
