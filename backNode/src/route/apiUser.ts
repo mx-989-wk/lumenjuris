@@ -490,10 +490,6 @@ routerUser.post("/forgotpassword", async (req: Request, res: Response) => {
   }
 });
 
-/**
- * GET /resetpassword/:token
- * Lien cliqué depuis l'email — valide le token et redirige vers le front avec le token en query param
- */
 routerUser.get(
   "/resetpassword/:token",
   async (req: Request<{ token: string }>, res: Response) => {
@@ -547,11 +543,7 @@ routerUser.get(
   },
 );
 
-/**
- * POST /resetpassword
- * Appelé par le formulaire frontend — vérifie le token et met à jour le mot de passe
- */
-routerUser.post("/resetpassword", async (req: Request, res: Response) => {
+routerUser.post("/updatepassword", async (req: Request, res: Response) => {
   try {
     const { token, password } = req.body;
 

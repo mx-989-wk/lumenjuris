@@ -14,6 +14,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "../ui/DropDownMenu";
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -100,7 +101,8 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
 
   return (
     <div className="flex items-center gap-1 lg:pr-2">
-      <nav className="flex items-center gap-1  pr-1 lg:gap-3 lg:pr-3 xl:gap-4 xl:pr-4 2xl:hidden">
+      {/* AFFICHAGE MENU TABLETTES OU MOBILE */}
+      <nav className="flex items-center gap-1  pr-1 lg:hidden">
         {isConnected && (
           <Link to="/dashboard">
             <Button
@@ -117,7 +119,7 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
                 pathname === "/veille" ||
                 pathname === "/conformite"
                   ? " text-gray-800 xl:tracking-wide font-semibold xl:text-[16px] hover:cursor-default"
-                  : "text-gray-400 hover:bg-lumenjuris-background"
+                  : "text-gray-400 hover:bg-lumenjuris-background transition-all delay-100"
               }
             >
               <LayoutDashboard className="size-5" />
@@ -133,26 +135,10 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
               className={
                 pathname === "/analyzer"
                   ? " text-gray-800 xl:tracking-wide font-semibold xl:text-[16px] hover:cursor-default"
-                  : "text-gray-400 hover:bg-lumenjuris-background"
+                  : "text-gray-400 hover:bg-lumenjuris-background transition-all delay-100"
               }
             >
               <FileCheckIcon className="size-5" />
-            </Button>
-          </Link>
-        )}
-        {isConnected && (
-          <Link to="/mon-compte">
-            <Button
-              variant="ghost"
-              size="icon"
-              className={
-                pathname === "/mon-compte"
-                  ? " text-gray-800 xl:tracking-wide font-semibold xl:text-[16px] hover:cursor-default"
-                  : "text-gray-400 hover:bg-lumenjuris-background"
-              }
-              onClick={onNavClick}
-            >
-              <User className="size-5" />
             </Button>
           </Link>
         )}
@@ -164,7 +150,7 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
               className={
                 pathname === "/sandbox"
                   ? " text-gray-800 xl:tracking-wide font-semibold xl:text-[16px] hover:cursor-default"
-                  : "text-gray-400 hover:bg-lumenjuris-background"
+                  : "text-gray-400 hover:bg-lumenjuris-background transition-all delay-100"
               }
               onClick={onNavClick}
             >
@@ -174,7 +160,8 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
         )}
       </nav>
 
-      <nav className="hidden 2xl:flex items-center gap-1">
+      {/* AFFICHAGE MENU ECRANS LARGE */}
+      <nav className="hidden lg:flex items-center gap-1">
         {isConnected && (
           <Link to="/dashboard">
             <Button
@@ -191,11 +178,11 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
                 pathname === "/veille" ||
                 pathname === "/conformite"
                   ? " text-gray-500 xl:tracking-wide font-semibold xl:text-[16px] hover:cursor-default"
-                  : "text-gray-400 hover:bg-lumenjuris-background"
+                  : "text-gray-400 hover:bg-lumenjuris-background transition-all delay-100"
               }
             >
               <LayoutDashboard />
-              Mon workspace
+              Dashboard
             </Button>
           </Link>
         )}
@@ -208,28 +195,11 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
               className={
                 pathname === "/analyzer"
                   ? " text-gray-500 xl:tracking-wide font-semibold xl:text-[16px] hover:cursor-default"
-                  : "text-gray-400 hover:bg-lumenjuris-background"
+                  : "text-gray-400 hover:bg-lumenjuris-background transition-all delay-100"
               }
             >
               <FileCheckIcon />
               Analyse
-            </Button>
-          </Link>
-        )}
-        {isConnected && (
-          <Link to="/mon-compte">
-            <Button
-              variant="ghost"
-              size="lg"
-              className={
-                pathname === "/mon-compte"
-                  ? " text-gray-500 xl:tracking-wide font-semibold xl:text-[16px] hover:cursor-default"
-                  : "text-gray-400 hover:bg-lumenjuris-background"
-              }
-              onClick={onNavClick}
-            >
-              <User />
-              Mon compte
             </Button>
           </Link>
         )}
@@ -241,7 +211,7 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
               className={
                 pathname === "/sandbox"
                   ? " text-gray-500 xl:tracking-wide font-semibold xl:text-[16px] hover:cursor-default"
-                  : "text-gray-400 hover:bg-lumenjuris-background"
+                  : "text-gray-400 hover:bg-lumenjuris-background transition-all delay-100"
               }
               onClick={onNavClick}
             >
@@ -284,15 +254,25 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
                 }
               />
               <DropdownMenuContent
-                sideOffset={12}
-                className="min-w-28 bg-lumenjuris-background ring-lumenjuris/60 inline-flex justify-center font-medium text-sm"
+                sideOffset={22}
+                className="min-w-28 bg-lumenjuris-background ring-lumenjuris/60 font-medium text-sm"
               >
                 <button
                   onClick={handleUserLogout}
-                  className="cursor-pointer inline-flex justify-center items-center gap-1"
+                  className="cursor-pointer inline-flex justify-center items-center gap-1 px-4 text-gray-400 hover:text-gray-600 transition-all delay-100"
                 >
-                  Logout
                   <LogOutIcon size={14} />
+                  Logout
+                </button>
+                <DropdownMenuSeparator />
+                <button
+                  onClick={() => {
+                    navigate("/mon-compte");
+                  }}
+                  className="cursor-pointer inline-flex justify-center items-center gap-1 px-4 text-gray-400 hover:text-gray-600 transition-all delay-100"
+                >
+                  <User size={14} />
+                  Mon compte
                 </button>
               </DropdownMenuContent>
             </DropdownMenu>

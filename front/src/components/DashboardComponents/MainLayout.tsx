@@ -107,7 +107,7 @@ export function MainLayout() {
             >
               <PanelLeft className="h-4 w-4" />
             </button>
-            <div className="hidden sm:flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
+            {/* <div className="hidden sm:flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
               <Search className="h-4 w-4 text-gray-400" />
               <input
                 type="text"
@@ -115,7 +115,7 @@ export function MainLayout() {
                 placeholder="Rechercher un document, une clause..."
                 className="bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
               />
-            </div>
+            </div> */}
           </div>
 
           <HeaderNavigationBar />
