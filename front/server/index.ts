@@ -251,7 +251,7 @@ function handleSignUpUser(req: Request, res: Response): void {
 }
 
 function handleNodeUserForgotPassword(req: Request, res: Response): void {
-  relayToNode(req, res, "");
+  relayToNode(req, res, "/user/forgotpassword");
 }
 
 // Multipart (upload PDF) — stream direct, body non consommé par express.json
@@ -287,7 +287,7 @@ app.post("/api/user/export-data", handleNodeUserExportData);
 app.delete("/api/user/account", handleNodeUserDeleteAccount);
 app.get("/api/enterprise", handleNodeEnterpriseGet);
 app.put("/api/enterprise", handleNodeEnterpriseUpdate);
-app.post("api/auth/forgotpassword", handleNodeUserForgotPassword);
+app.post("/api/auth/forgotpassword", handleNodeUserForgotPassword);
 
 // ---- Front React : Vite middleware (dev) ou static (prod) ---------------------
 if (IS_PROD) {

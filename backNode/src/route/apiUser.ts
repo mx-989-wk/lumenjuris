@@ -86,10 +86,6 @@ routerUser.post("/create", async (req: Request, res: Response) => {
   }
 });
 
-interface PutVerifyUser extends Record<string, string> {
-  token: string;
-}
-
 routerUser.get(
   "/verify/:token",
   async (req: Request<{ token: string }>, res: Response) => {
@@ -453,5 +449,182 @@ routerUser.delete(
     });
   },
 );
+
+routerUser.post("/forgotpassword", async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: "Un email est requis pour réinitialiser votre mot de passe",
+    });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: email },
+    });
+
+    console.log("🚀🚀🚀 USER RESET", user);
+
+    if (user) {
+      const token = await new Token().createToken(
+        user.idUser,
+        "forgotPassword",
+      );
+      const url = `${process.env.HOST}/user/resetpassword/${token.token}`;
+      const mailer = await new Mailer(email).sendResetPassword(
+        url,
+        `${user.prenom} ${user.nom}`,
+      );
+
+      return res.status(200).json({
+        success: mailer.success,
+        message: mailer.message,
+      });
+    } else {
+      return;
+    }
+  } catch (error) {
+    console.log("🛑🛑🛑🛑 USER RESET", error);
+  }
+});
+
+/**
+ * GET /resetpassword/:token
+ * Lien cliqué depuis l'email — valide le token et redirige vers le front avec le token en query param
+ */
+routerUser.get(
+  "/resetpassword/:token",
+  async (req: Request<{ token: string }>, res: Response) => {
+    try {
+      const { token } = req.params;
+
+      const tokenEntry = await prisma.token.findUnique({
+        where: { token },
+      });
+
+      if (!tokenEntry || tokenEntry.type !== "forgotPassword") {
+        return res.redirect(
+          `${process.env.HOST_FRONT}/reset-password?reason=invalid`,
+        );
+      }
+
+      if (tokenEntry.status === "USED") {
+        return res.redirect(
+          `${process.env.HOST_FRONT}/reset-password?reason=already-used`,
+        );
+      }
+
+      if (tokenEntry.expiresAt < new Date()) {
+        await prisma.token.update({
+          where: { token },
+          data: { status: "EXPIRED" },
+        });
+        return res.redirect(
+          `${process.env.HOST_FRONT}/reset-password?reason=expired`,
+        );
+      }
+
+      if (tokenEntry.status !== "ACTIVE") {
+        return res.redirect(
+          `${process.env.HOST_FRONT}/reset-password?reason=already-used`,
+        );
+      }
+
+      return res.redirect(
+        `${process.env.HOST_FRONT}/reset-password?token=${token}`,
+      );
+    } catch (err) {
+      console.error(
+        "Erreur lors de la validation du token reset password:",
+        err,
+      );
+      return res.redirect(
+        `${process.env.HOST_FRONT}/reset-password?reason=server`,
+      );
+    }
+  },
+);
+
+/**
+ * POST /resetpassword
+ * Appelé par le formulaire frontend — vérifie le token et met à jour le mot de passe
+ */
+routerUser.post("/resetpassword", async (req: Request, res: Response) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Un token et un mot de passe sont requis.",
+      });
+    }
+
+    const tokenEntry = await prisma.token.findUnique({
+      where: { token },
+    });
+
+    if (!tokenEntry || tokenEntry.type !== "forgotPassword") {
+      return res.status(400).json({
+        success: false,
+        message: "Token invalide.",
+      });
+    }
+
+    if (tokenEntry.status === "USED") {
+      return res.status(400).json({
+        success: false,
+        message: "Ce lien a déjà été utilisé.",
+      });
+    }
+
+    if (tokenEntry.expiresAt < new Date()) {
+      await prisma.token.update({
+        where: { token },
+        data: { status: "EXPIRED" },
+      });
+      return res.status(400).json({
+        success: false,
+        message: "Ce lien a expiré. Veuillez effectuer une nouvelle demande.",
+      });
+    }
+
+    if (tokenEntry.status !== "ACTIVE") {
+      return res.status(400).json({
+        success: false,
+        message: "Token invalide ou déjà utilisé.",
+      });
+    }
+
+    const updated = await new User().update(tokenEntry.userId, { password });
+
+    if (!updated.success) {
+      return res.status(500).json({
+        success: false,
+        message:
+          "Une erreur est survenue lors de la mise à jour du mot de passe.",
+      });
+    }
+
+    await prisma.token.update({
+      where: { token },
+      data: { status: "USED" },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Votre mot de passe a été réinitialisé avec succès.",
+    });
+  } catch (err) {
+    console.error("Erreur lors de la réinitialisation du mot de passe:", err);
+    return res.status(500).json({
+      success: false,
+      message:
+        "Une erreur est survenue lors de la réinitialisation du mot de passe.",
+    });
+  }
+});
 
 export default routerUser;

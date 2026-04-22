@@ -80,6 +80,8 @@ const SignupForm = ({
       setSubmitCguError(true);
     } else {
       setSubmitLoading(true);
+      const trimedLastName = lastName.trim();
+      const trimedFirstName = firstName.trim();
       try {
         const signupResponse = await fetch("/api/signup", {
           method: "POST",
@@ -88,8 +90,8 @@ const SignupForm = ({
           },
           body: JSON.stringify({
             email: email,
-            nom: lastName.trim(),
-            prenom: firstName.trim(),
+            nom: trimedLastName,
+            prenom: trimedFirstName,
             password: password,
             cgu: acceptCgu,
           }),

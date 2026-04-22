@@ -11,6 +11,7 @@ import { Conformite } from "./components/DashboardComponents/Conformite";
 
 import { Dashboard } from "./page/Dashboard";
 import { VerifyAccount } from "./page/VerifyAccount";
+import { ResetPassword } from "./page/ResetPassword";
 import { Inscription } from "./page/Inscription";
 import { Sandbox } from "./page/Sandbox";
 import { ParamCompte } from "./page/ParamCompte";
@@ -39,6 +40,7 @@ export function App() {
         <Route path="/inscription" element={<Inscription />} />
         <Route path="/mon-compte" element={<ParamCompte />} />
         <Route path="/verify-account" element={<VerifyAccount />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </>
