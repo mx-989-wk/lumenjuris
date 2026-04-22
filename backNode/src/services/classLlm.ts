@@ -1,8 +1,9 @@
 import { prisma } from "../../prisma/singletonPrisma"
 
 const LLM_MODELS = [
-    { name: "GPT-4o-mini", pricePerMillionTokenInput: (0.15 * 100), pricePerMillionTokenOutput: (0.6 * 100) },
-    { name: "GPT-5.2", pricePerMillionTokenInput: (1.75 * 100), pricePerMillionTokenOutput: (14 * 100) },
+    { name: "gpt-4o", pricePerMillionTokenInput: (5 * 100), pricePerMillionTokenOutput: (15 * 100) },
+    { name: "gpt-4o-mini", pricePerMillionTokenInput: (0.15 * 100), pricePerMillionTokenOutput: (0.6 * 100) },
+    { name: "gpt-5.2", pricePerMillionTokenInput: (1.75 * 100), pricePerMillionTokenOutput: (14 * 100) },
 ]
 
 

@@ -63,7 +63,7 @@ Réponds STRICTEMENT en JSON:
         try {
           const txt = await callOpenAI([
             { role: 'user', content: prompt }
-          ], { model: 'gpt-3.5-turbo', temperature: 0.2 });
+          ], { model: 'gpt-4o', temperature: 0.2 });
           obj = JSON.parse(txt || '{}');
         } catch (e) {
           console.error('OpenAI error:', e);
