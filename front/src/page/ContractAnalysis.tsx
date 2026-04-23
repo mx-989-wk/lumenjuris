@@ -12,8 +12,8 @@ import MainHeader from "../components/MainHeader/MainHeader";
 // ===> ACTION 3 : CORRIGER L'IMPORT ICI
 import {
   EnhancedClauseDetail,
-  clearEnhancedClauseCaches,
 } from "../components/ContractAnalysis/EnhancedClauseDetail/EnhancedClauseDetail";
+import { clearEnhancedClauseCaches } from "../components/ContractAnalysis/EnhancedClauseDetail/enhancedClauseCaches";
 import { ActionButtons } from "../components/ContractAnalysis/ActionButtons";
 import { ContextualAnalysisForm } from "../components/ContractAnalysis/ContextualAnalysisForm";
 import React, { Suspense } from "react";
@@ -27,10 +27,48 @@ import { useRiskStats } from "../hooks/useRiskStats";
 import { useShareUrl } from "../hooks/useShareUrl";
 import { useAppliedRecommendationsStore } from "../store/appliedRecommendationsStore";
 import { useDocumentTextStore } from "../store/documentTextStore";
+import type { AnalysisProgress } from "../utils/aiAnalyser/aiAnalyzer";
 
 // ---------------------------------------------------------------------
 // SUPPRIMER LA FONCTION DÉPLACÉE PAR ERREUR (elle existe déjà en utils)
 // ---------------------------------------------------------------------
+
+function getProcessingStatusLines(
+  phase: string,
+  analysisProgress?: AnalysisProgress | null,
+): string[] {
+  const lines: string[] = ["Préparation du document"];
+
+  if (phase === "analysis" || phase === "scoring" || phase === "enhanced") {
+    lines.push("Analyse des clauses");
+  }
+
+  if (analysisProgress?.totalChunks && analysisProgress.totalChunks > 1) {
+    lines.push(
+      `${analysisProgress.completedChunks}/${analysisProgress.totalChunks} partie(s) traitée(s)`,
+    );
+  }
+
+  if ((analysisProgress?.currentAttempt ?? 1) > 1) {
+    lines.push(
+      `Essai ${analysisProgress?.currentAttempt}/${analysisProgress?.totalAttempts}`,
+    );
+  }
+
+  if (phase === "scoring" || phase === "enhanced") {
+    lines.push("Évaluation des risques");
+  }
+
+  if (phase === "enhanced") {
+    lines.push("Finalisation du rapport");
+  }
+
+  if (analysisProgress?.message) {
+    lines.push(analysisProgress.message);
+  }
+
+  return lines;
+}
 
 export default function ContractAnalysis() {
   const navigate = useNavigate();
@@ -79,6 +117,7 @@ export default function ContractAnalysis() {
     contract,
     isProcessing,
     processingPhase,
+    analysisProgress,
     currentAnalysisContext,
     marketAnalysis,
     isMarketAnalysisLoading,
@@ -198,14 +237,6 @@ export default function ContractAnalysis() {
   };
 
   const onContextualAnalysis = async (context: any) => {
-    // Timeout de sécurité pour éviter de rester bloqué
-    const timeoutId = setTimeout(() => {
-      console.log(
-        "⏰ Timeout de sécurité déclenché - forçage de setShowAnalysisForm(false)",
-      );
-      setShowAnalysisForm(false);
-    }, 60000); // 60 secondes maximum
-
     try {
       resetAllPatches();
       clearEnhancedClauseCaches();
@@ -220,8 +251,6 @@ export default function ContractAnalysis() {
       // IMPORTANT: Masquer le formulaire même en cas d'erreur pour éviter de rester bloqué
       setShowAnalysisForm(false);
       console.log("⚠️ setShowAnalysisForm(false) appelé après erreur");
-    } finally {
-      clearTimeout(timeoutId);
     }
   };
 
@@ -261,6 +290,10 @@ export default function ContractAnalysis() {
   };
 
   const clauseData = contract?.clauses.find((c) => c.id === selectedClause);
+  const processingStatusLines = getProcessingStatusLines(
+    processingPhase,
+    analysisProgress,
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -322,7 +355,6 @@ export default function ContractAnalysis() {
                           animation: "shimmer 2s ease-in-out infinite",
                         }}
                       ></div>
-                      {/* Barre qui se remplit progressivement */}
                       <div
                         className="h-full bg-gradient-to-r from-blue-500 via-purple-600 to-green-600 transition-all duration-500 ease-out"
                         style={{
@@ -343,9 +375,10 @@ export default function ContractAnalysis() {
                   </div>
                 </div>
 
-                {/* Messages professionnels qui tournent */}
-                <div className="text-center text-sm text-slate-600">
-                  Analyse en cours…
+                <div className="space-y-2 text-sm text-slate-600">
+                  {processingStatusLines.map((line) => (
+                    <p key={line}>{line}</p>
+                  ))}
                 </div>
               </div>
             </div>
