@@ -7,6 +7,7 @@ import { EnterpriseSettingsPanel } from "../components/ParamComponents/Enterpris
 import { ParamLayout } from "../components/ParamComponents/ParamLayout";
 import { PreferenceSettingsPanel } from "../components/ParamComponents/PreferenceSettingsPanel";
 import { ConfirmationModal } from "../components/ui/ConfirmationModal";
+import { TwoFactorCodeModal } from "../components/ui/TwoFactorCodeModal";
 import type {
   AccountConfirmationModal,
   AccountProfile,
@@ -42,6 +43,7 @@ export function ParamCompte() {
   const [accountPassword, setAccountPassword] = useState("");
   const [accountProvider, setAccountProvider] = useState<AccountProvider>(null);
   const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
+  const [isTwoFactorCodeModalOpen, setIsTwoFactorCodeModalOpen] = useState(false);
   const [activeConfirmationModal, setActiveConfirmationModal] =
     useState<AccountConfirmationModal | null>(null);
   const [isDyslexicModeEnabled, setIsDyslexicModeEnabled] = useState(false);
@@ -240,6 +242,23 @@ export function ParamCompte() {
     setActiveConfirmationModal("password_change");
   };
 
+  const handleTwoFactorCodeVerify = async (code: string) => {
+    const response = await fetch("/api/user/two-factor/verify", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+    const payload = (await response.json().catch(() => null)) as ApiResponse<unknown> | null;
+
+    if (!response.ok || !payload?.success) {
+      throw new Error(payload?.message ?? "Code invalide. Veuillez réessayer.");
+    }
+
+    setIsTwoFactorEnabled(true);
+    setIsTwoFactorCodeModalOpen(false);
+  };
+
   const handleTwoFactorCheckedChange = (checked: boolean) => {
     if (checked) {
       setActiveConfirmationModal("two_factor");
@@ -321,22 +340,20 @@ export function ParamCompte() {
         .then(async (response) => {
           const payload = (await response
             .json()
-            .catch(() => null)) as ApiResponse<{
-            enabled?: boolean;
-          }> | null;
+            .catch(() => null)) as ApiResponse<unknown> | null;
 
           if (!response.ok || !payload?.success) {
             throw new Error(
               payload?.message ||
-                "Impossible de mettre a jour la double authentification.",
+                "Impossible d'envoyer le code de vérification.",
             );
           }
 
-          setIsTwoFactorEnabled(Boolean(payload.data?.enabled));
+          setActiveConfirmationModal(null);
+          setIsTwoFactorCodeModalOpen(true);
         })
         .catch((error) => {
           console.error(error);
-          setIsTwoFactorEnabled(false);
         });
     },
     onPasswordConfirm: () => {
@@ -446,6 +463,16 @@ export function ParamCompte() {
           onConfirm={confirmationModalContent.onConfirm}
         />
       ) : null}
+
+      <TwoFactorCodeModal
+        open={isTwoFactorCodeModalOpen}
+        email={accountProfile.email}
+        onCancel={() => {
+          setIsTwoFactorCodeModalOpen(false);
+          setIsTwoFactorEnabled(false);
+        }}
+        onVerify={handleTwoFactorCodeVerify}
+      />
     </>
   );
 }

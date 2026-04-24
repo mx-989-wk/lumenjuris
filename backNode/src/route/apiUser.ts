@@ -451,7 +451,7 @@ routerUser.post(
       return res.status(mailer.success ? 200 : 500).json({
         success: mailer.success,
         message: mailer.message,
-        data: { enabled: mailer.success },
+        data: { enabled: false },
       });
     } catch (err) {
       console.error(
@@ -498,7 +498,10 @@ routerUser.post(
         });
       }
 
-      if (tokenEntry.expiresAt < new Date() || tokenEntry.status === "EXPIRED") {
+      if (
+        tokenEntry.expiresAt < new Date() ||
+        tokenEntry.status === "EXPIRED"
+      ) {
         await prisma.token.update({
           where: { idToken: tokenEntry.idToken },
           data: { status: "EXPIRED" },
@@ -524,7 +527,8 @@ routerUser.post(
       );
       return res.status(500).json({
         success: false,
-        message: "Une erreur serveur est survenue lors de la vérification du code.",
+        message:
+          "Une erreur serveur est survenue lors de la vérification du code.",
       });
     }
   },

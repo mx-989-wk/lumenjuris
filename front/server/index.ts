@@ -230,6 +230,10 @@ function handleNodeUserTwoFactor(req: Request, res: Response): void {
   relayToNode(req, res, `/user/two-factor`);
 }
 
+function handleNodeUserTwoFactorVerify(req: Request, res: Response): void {
+  relayToNode(req, res, `/user/two-factor/verify`);
+}
+
 function handleNodeUserExportData(req: Request, res: Response): void {
   relayToNode(req, res, `/user/export-data`);
 }
@@ -287,6 +291,7 @@ app.post("/api/user/auth/logout", handleNodeLogout);
 app.get("/api/user/preferences", handleNodeUserPreferences);
 app.put("/api/user/preferences", handleNodeUserPreferences);
 app.post("/api/user/two-factor", handleNodeUserTwoFactor);
+app.post("/api/user/two-factor/verify", handleNodeUserTwoFactorVerify);
 app.post("/api/user/export-data", handleNodeUserExportData);
 app.delete("/api/user/account", handleNodeUserDeleteAccount);
 app.get("/api/enterprise", handleNodeEnterpriseGet);
