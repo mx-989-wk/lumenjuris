@@ -41,7 +41,7 @@ export function MainLayout() {
     >
       {/* ── Sidebar ── */}
       <aside
-        className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} flex-col fixed inset-y-0 left-0 w-64 bg-lumenjuris-sidebar z-20 transition-all duration-300 ease-in-out`}
+        className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} hidden md:flex flex-col fixed inset-y-0 left-0 w-64 bg-lumenjuris-sidebar z-20 transition-all duration-300`}
       >
         <div className="p-4 pb-2">
           <Link to="/dashboard" className="flex items-center gap-2.5">

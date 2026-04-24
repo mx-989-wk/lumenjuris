@@ -37,6 +37,12 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
   const [userData, setUserData] = useState<UserDataProfile | null>(null);
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [userInfoError, setUserInfoError] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mobile = window.innerWidth < 768;
+    setIsMobile(mobile);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -266,10 +272,10 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
             {userAvatarUrl ? (
               <img
                 src={userAvatarUrl}
-                className=" h-8 w-8 rounded-full object-cover border border-lumenjuris/60"
+                className="hidden md:block h-8 w-8 rounded-full object-cover border border-lumenjuris/60"
               ></img>
             ) : (
-              <div className="flex h-8 w-8 rounded-full bg-lumenjuris items-center justify-center text-white text-xs font-medium">
+              <div className="hidden md:flex h-8 w-8 rounded-full bg-lumenjuris items-center justify-center text-white text-xs font-medium">
                 {userData?.prenom
                   ? `${userData.prenom.slice(0, 1)}${userData.nom.slice(0, 1)}`
                   : `${userData?.nom.slice(0, 1)}`}
@@ -277,16 +283,29 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
             )}
 
             <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <button className="hidden md:flex items-center gap-1 cursor-pointer text-sm font-medium text-gray-800">
-                    {userData?.prenom
-                      ? `${userData.prenom} ${userData.nom.slice(0, 1)}.`
-                      : `${userData?.nom.slice(0, 12)}.`}
-                    <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
-                  </button>
-                }
-              />
+              {isMobile ? (
+                <DropdownMenuTrigger
+                  render={
+                    <button className="flex md:hidden h-8 w-8 rounded-full bg-lumenjuris justify-center items-center cursor-pointer text-xs font-medium text-white">
+                      {userData?.prenom
+                        ? `${userData.prenom.slice(0, 1)}${userData.nom.slice(0, 1)}`
+                        : `${userData?.nom.slice(0, 1)}`}
+                    </button>
+                  }
+                />
+              ) : (
+                <DropdownMenuTrigger
+                  render={
+                    <button className="hidden md:flex items-center gap-1 cursor-pointer text-sm font-medium text-gray-800">
+                      {userData?.prenom
+                        ? `${userData.prenom} ${userData.nom.slice(0, 1)}.`
+                        : `${userData?.nom.slice(0, 12)}.`}
+                      <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                    </button>
+                  }
+                />
+              )}
+
               <DropdownMenuContent
                 sideOffset={22}
                 className="min-w-28 bg-lumenjuris-sidebar ring-lumenjuris/60 font-medium text-sm px-4"
