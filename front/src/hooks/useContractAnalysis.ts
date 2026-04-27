@@ -39,6 +39,11 @@ interface UseContractAnalysisReturn {
   handleStandardAnalysis: () => Promise<void>;
   handleContextualAnalysis: (context: AnalysisContext) => Promise<void>;
   handleMarketAnalysis: () => Promise<void>;
+  restoreAnalysis: (state: {
+    contract: ContractAnalysis;
+    currentAnalysisContext: AnalysisContext | null;
+    marketAnalysis: MarketAnalysisResult | null;
+  }) => void;
   resetAnalysis: () => void;
 }
 
@@ -134,7 +139,7 @@ export const useContractAnalysis = (): UseContractAnalysisReturn => {
             : 0,
         contractType:
           analysisType === "contextual"
-            ? "Contrat analysé avec contexte"
+            ? context?.contractType?.trim() || "Contrat analysé"
             : "Contrat analysé",
         processed: true,
         aiConfidenceScore: analysisType === "contextual" ? 90 : 85,
@@ -370,6 +375,27 @@ export const useContractAnalysis = (): UseContractAnalysisReturn => {
     setProcessingPhase("extraction");
   }, []);
 
+  const restoreAnalysis = useCallback(
+    ({
+      contract,
+      currentAnalysisContext,
+      marketAnalysis,
+    }: {
+      contract: ContractAnalysis;
+      currentAnalysisContext: AnalysisContext | null;
+      marketAnalysis: MarketAnalysisResult | null;
+    }) => {
+      setContract(contract);
+      setCurrentAnalysisContext(currentAnalysisContext);
+      setMarketAnalysis(marketAnalysis);
+      setIsProcessing(false);
+      setAnalysisProgress(null);
+      setIsMarketAnalysisLoading(false);
+      setProcessingPhase(contract.processed ? "report" : "extraction");
+    },
+    [],
+  );
+
   return {
     contract,
     isProcessing,
@@ -383,6 +409,7 @@ export const useContractAnalysis = (): UseContractAnalysisReturn => {
     handleStandardAnalysis,
     handleContextualAnalysis,
     handleMarketAnalysis,
+    restoreAnalysis,
     resetAnalysis,
   };
 };
