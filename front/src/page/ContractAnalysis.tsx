@@ -28,7 +28,7 @@ import { useShareUrl } from "../hooks/useShareUrl";
 import { useAppliedRecommendationsStore } from "../store/appliedRecommendationsStore";
 import { useDocumentTextStore } from "../store/documentTextStore";
 
-import { useAuth } from "../context/AuthContext";
+import { useUserStore } from "../store/userStore";
 
 // ---------------------------------------------------------------------
 // SUPPRIMER LA FONCTION DÉPLACÉE PAR ERREUR (elle existe déjà en utils)
@@ -37,7 +37,7 @@ import { useAuth } from "../context/AuthContext";
 export default function ContractAnalysis() {
   const location = useLocation();
 
-  const { userConnected } = useAuth();
+  const { isConnected: userConnected } = useUserStore();
 
   // États locaux
   const [selectedClause, setSelectedClause] = useState<string | null>(null);

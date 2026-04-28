@@ -22,8 +22,7 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
-import { useAuth } from "../../context/AuthContext";
-import { UserData } from "../../types/userData";
+import { useUserStore } from "../../store/userStore";
 
 interface HeaderNavBarProps {
   onNavClick?: () => void;
@@ -32,89 +31,28 @@ interface HeaderNavBarProps {
 const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { login, logout } = useAuth();
 
-  const [isConnected, setIsConnected] = useState(false);
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
-  const [userInfoError, setUserInfoError] = useState<string | null>(null);
+  const { userData, isConnected, userAvatarUrl, fetchUser, logoutUser } =
+    useUserStore();
+
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
+      setIsMobile(window.innerWidth < 768);
     };
-
     handleResize();
     window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/api/user/get", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
+    fetchUser();
+  }, []);
 
-        const dataResponse = await response.json();
-        console.log("USER DATA :", dataResponse);
-        if (!dataResponse.success) {
-          setUserInfoError(dataResponse.message);
-        } else if (
-          dataResponse.success &&
-          dataResponse.data.profile.isVerified
-        ) {
-          setIsConnected(true);
-          setUserData(dataResponse.data);
-          setUserAvatarUrl(dataResponse.data.provider.avatarUrl);
-          login(
-            dataResponse.data.profile.role,
-            dataResponse.data.profile.isVerified,
-            true,
-            dataResponse.data,
-          );
-        }
-      } catch (error) {
-        console.error("🛑🛑🛑 ERREUR SERVEUR GET USER", error);
-        setUserInfoError("Un problème est survenu, veuillez vous reconnecter.");
-      }
-    };
-    fetchData();
-  }, [isConnected]);
-
-  const handleUserLogout = () => {
-    const fetchLogout = async () => {
-      try {
-        const response = await fetch("/api/user/auth/logout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        });
-        const logoutResponse = await response.json();
-
-        if (logoutResponse.success) {
-          setIsConnected(false);
-          setUserData(null);
-          logout();
-          setUserInfoError(logoutResponse.message);
-          navigate("/inscription");
-        } else {
-          setUserInfoError(logoutResponse.message);
-        }
-      } catch (error) {
-        setUserInfoError(
-          "Une erreur s'est produite, vous n'avez pas été déconnecté...",
-        );
-        console.log(error);
-      }
-    };
-    fetchLogout();
+  const handleUserLogout = async () => {
+    const success = await logoutUser();
+    if (success) navigate("/inscription");
   };
 
   return (
@@ -285,11 +223,12 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
                   </button>
                 }
               />
-              <DropdownMenuContent className="min-w-28 bg-lumenjuris-sidebar ring-lumenjuris/60 font-medium text-sm px-4 text-gray-400">
-                <p>
-                  Pensez à compléter les informations de votre entreprise dans
-                  :{" "}
-                </p>
+              <DropdownMenuContent
+                sideOffset={6}
+                alignOffset={-60}
+                className="min-w-28 bg-lumenjuris-sidebar ring-lumenjuris/60 font-medium text-sm px-4 text-gray-400"
+              >
+                <p>Pensez à compléter les informations manquantes dans : </p>
                 <Link to="/mon-compte">
                   <button className="font-semibold text-gray-100">{`Mon compte > Mon entreprise`}</button>
                 </Link>
@@ -340,7 +279,8 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
               )}
 
               <DropdownMenuContent
-                sideOffset={22}
+                sideOffset={14}
+                alignOffset={2}
                 className="min-w-28 bg-lumenjuris-sidebar ring-lumenjuris/60 font-medium text-sm px-4"
               >
                 <button

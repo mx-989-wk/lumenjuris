@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 import HeaderNavigationBar from "../MainHeader/HeaderNavigationBar";
-import { useAuth } from "../../context/AuthContext";
+import { useUserStore } from "../../store/userStore";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Tableau de bord", path: "/dashboard" },
@@ -30,7 +30,7 @@ const navItems = [
 export function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const { userConnected } = useAuth();
+  const { isConnected: userConnected } = useUserStore();
 
   return !userConnected ? (
     <Navigate to="/inscription" />

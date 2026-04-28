@@ -24,7 +24,7 @@ import {
   normalizeEnterpriseSettings,
 } from "../utils/param/paramSettings";
 
-import { useAuth } from "../context/AuthContext";
+import { useUserStore } from "../store/userStore";
 
 const EMPTY_ACCOUNT_PROFILE: AccountProfile = {
   prenom: "",
@@ -57,7 +57,7 @@ export function ParamCompte() {
   const enterpriseMeasureRef = useRef<HTMLElement>(null);
   const preferenceMeasureRef = useRef<HTMLElement>(null);
 
-  const { userConnected } = useAuth();
+  const { isConnected: userConnected } = useUserStore();
 
   useEffect(() => {
     let isCancelled = false;
@@ -345,8 +345,6 @@ export function ParamCompte() {
     setActiveConfirmationModal(null);
     setActiveTab(nextTab);
   };
-
-  const handleChangeProfileInfo = () => {};
 
   const confirmationModalContent = getParamConfirmationModalContent({
     activeConfirmationModal,

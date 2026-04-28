@@ -1,12 +1,12 @@
 import MainHeader from "../components/MainHeader/MainHeader";
 
-import { useAuth } from "../context/AuthContext";
+import { useUserStore } from "../store/userStore";
 
 import { Navigate } from "react-router-dom";
 import { useEffect } from "react";
 
 export const Monitoring = () => {
-  const { userRole, userConnected } = useAuth();
+  const { isConnected: userConnected, userData } = useUserStore();
 
   useEffect(() => {
     //1. Chercher le role de user et refuser accès if !=="ADMIN"
@@ -20,7 +20,7 @@ export const Monitoring = () => {
 
   return !userConnected ? (
     <Navigate to="/inscription" />
-  ) : userRole != "ADMIN" ? (
+  ) : userData?.profile.role !== "ADMIN" ? (
     <Navigate to="/dashboard" />
   ) : (
     <>

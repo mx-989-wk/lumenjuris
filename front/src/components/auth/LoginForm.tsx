@@ -8,7 +8,7 @@ import { FcGoogle } from "react-icons/fc";
 
 import { AlertBanner } from "../common/AlertBanner";
 import { TwoFactorCodeModal } from "../ui/TwoFactorCodeModal";
-import { useAuth } from "../../context/AuthContext";
+import { useUserStore } from "../../store/userStore";
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -44,13 +44,9 @@ const LoginForm = ({
   );
   const [twoFactorModalOpen, setTwoFactorModalOpen] = useState(false);
   const [twoFactorEmail, setTwoFactorEmail] = useState("");
-  const [pendingLoginData, setPendingLoginData] = useState<{
-    role: string;
-    isVerified: boolean;
-  } | null>(null);
 
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { fetchUser } = useUserStore();
 
   useEffect(() => {
     setForgotPassword(false);
@@ -89,22 +85,13 @@ const LoginForm = ({
       }
 
       if (dataResponse.twoFactorRequired) {
-        setPendingLoginData({
-          role: dataResponse.data.role,
-          isVerified: dataResponse.data.isVerified,
-        });
         setTwoFactorEmail(dataResponse.data.email);
         setTwoFactorModalOpen(true);
         setSubmitLoading(false);
         return;
       }
 
-      login(
-        dataResponse.data.role,
-        dataResponse.data.isVerified,
-        true,
-        dataResponse.data,
-      );
+      await fetchUser();
       navigate("/dashboard");
     } catch (error) {
       setServerError(true);
@@ -126,13 +113,12 @@ const LoginForm = ({
       throw new Error(payload?.message ?? "Code invalide. Veuillez réessayer.");
     }
 
-    login(pendingLoginData!.role, pendingLoginData!.isVerified, true, null);
+    await fetchUser();
     navigate("/dashboard");
   };
 
   const handleTwoFactorCancel = async () => {
     setTwoFactorModalOpen(false);
-    setPendingLoginData(null);
     setSubmitLoading(false);
     await fetch("/api/user/auth/logout", {
       method: "POST",

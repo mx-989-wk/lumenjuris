@@ -1,7 +1,7 @@
 import SignupForm from "../components/auth/SignupForm";
 import LoginForm from "../components/auth/LoginForm";
 import MainHeader from "../components/MainHeader/MainHeader";
-import { useAuth } from "../context/AuthContext";
+import { useUserStore } from "../store/userStore";
 
 // UI //
 import { Button } from "../components/ui/Button";
@@ -21,7 +21,7 @@ export function Inscription() {
   const [forgotPassword, setForgotPassword] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  const { userConnected } = useAuth();
+  const { isConnected: userConnected } = useUserStore();
 
   return userConnected ? (
     <Navigate to="/dashboard" />

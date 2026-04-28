@@ -5,7 +5,7 @@ import {
 } from "../components/common/AlertBanner";
 import MainHeader from "../components/MainHeader/MainHeader";
 
-import { useAuth } from "../context/AuthContext";
+import { useUserStore } from "../store/userStore";
 
 import { Navigate } from "react-router-dom";
 
@@ -97,7 +97,7 @@ export function Sandbox() {
   const [llmUsageError, setLlmUsageError] = useState("");
   const [llmUsageUpdatedAt, setLlmUsageUpdatedAt] = useState<Date | null>(null);
 
-  const { userRole, userConnected } = useAuth();
+  const { isConnected: userConnected, userData } = useUserStore();
 
   const spawn = (preset: (typeof PRESETS)[number]) => {
     setBanners((prev) => [
@@ -261,7 +261,7 @@ export function Sandbox() {
 
   return !userConnected ? (
     <Navigate to="/inscription" />
-  ) : userRole != "ADMIN" ? (
+  ) : userData?.profile.role !== "ADMIN" ? (
     <Navigate to="/dashboard" />
   ) : (
     <>
