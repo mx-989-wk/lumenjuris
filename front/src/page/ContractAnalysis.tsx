@@ -28,6 +28,15 @@ import { useRiskStats } from "../hooks/useRiskStats";
 import { useShareUrl } from "../hooks/useShareUrl";
 import { useAppliedRecommendationsStore } from "../store/appliedRecommendationsStore";
 import { useDocumentTextStore } from "../store/documentTextStore";
+import type {
+  AnalysisContext,
+  EnterpriseAnalysisContext,
+} from "../types/contextualAnalysis";
+import type {
+  ApiResponse,
+  ConventionCollectiveOption,
+  EnterpriseSettings,
+} from "../types/paramSettings";
 import type { AnalysisProgress } from "../utils/aiAnalyser/aiAnalyzer";
 import {
   createContractHistoryId,
@@ -80,6 +89,51 @@ function getProcessingStatusLines(
   return lines;
 }
 
+type EnterpriseGetData = EnterpriseSettings & {
+  selectedIdcc?: ConventionCollectiveOption | null;
+};
+
+function cleanEnterpriseContextValue(value?: string | null): string | null {
+  const cleanedValue = value?.trim();
+  return cleanedValue ? cleanedValue : null;
+}
+
+function getSelectedConventionCollective(
+  enterprise?: EnterpriseGetData | null,
+): ConventionCollectiveOption | null {
+  if (!enterprise) return null;
+
+  if (enterprise.selectedIdcc) {
+    return enterprise.selectedIdcc;
+  }
+
+  return (
+    enterprise.idccSelections.find(
+      (selection) => selection.key === enterprise.selectedIdccKey,
+    ) ?? null
+  );
+}
+
+function mapEnterpriseToAnalysisContext(
+  enterprise?: EnterpriseGetData | null,
+): EnterpriseAnalysisContext | undefined {
+  const selectedConvention = getSelectedConventionCollective(enterprise);
+  const enterpriseContext: EnterpriseAnalysisContext = {
+    collectiveAgreement: cleanEnterpriseContextValue(selectedConvention?.name),
+    collectiveAgreementIdcc: cleanEnterpriseContextValue(
+      selectedConvention?.idccCode,
+    ),
+    companyLegalForm: cleanEnterpriseContextValue(enterprise?.statusJuridique),
+    companyLegalFormCode: cleanEnterpriseContextValue(
+      enterprise?.statusJuridiqueCode,
+    ),
+  };
+
+  return Object.values(enterpriseContext).some(Boolean)
+    ? enterpriseContext
+    : undefined;
+}
+
 export default function ContractAnalysis() {
   const navigate = useNavigate();
 
@@ -115,11 +169,53 @@ export default function ContractAnalysis() {
   const [historyItems, setHistoryItems] = useState(() =>
     loadContractHistoryIndex(),
   );
+  const [enterpriseContext, setEnterpriseContext] = useState<
+    EnterpriseAnalysisContext | undefined
+  >(undefined);
 
   const setActiveHistoryId = (historyId: string | null) => {
     currentHistoryIdRef.current = historyId;
     setCurrentHistoryId(historyId);
   };
+
+  useEffect(() => {
+    const abortController = new AbortController();
+
+    const loadEnterpriseContext = async () => {
+      try {
+        const response = await fetch("/api/enterprise", {
+          credentials: "include",
+          signal: abortController.signal,
+        });
+        const payload = (await response.json().catch(() => null)) as
+          | ApiResponse<EnterpriseGetData>
+          | null;
+
+        if (!response.ok || !payload?.success) {
+          setEnterpriseContext(undefined);
+          return;
+        }
+
+        setEnterpriseContext(mapEnterpriseToAnalysisContext(payload.data));
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
+
+        console.error(
+          "Impossible de charger le contexte entreprise pour l'analyse.",
+          error,
+        );
+        setEnterpriseContext(undefined);
+      }
+    };
+
+    void loadEnterpriseContext();
+
+    return () => {
+      abortController.abort();
+    };
+  }, []);
 
   // Store pour les recommandations appliquées
   const { clearAllAppliedRecommendations } = useAppliedRecommendationsStore();
@@ -314,12 +410,20 @@ export default function ContractAnalysis() {
     }
   };
 
-  const onContextualAnalysis = async (context: any) => {
+  const onContextualAnalysis = async (context: AnalysisContext) => {
     try {
       resetAllPatches();
       clearEnhancedClauseCaches();
-      console.log("🚀 Début onContextualAnalysis avec contexte:", context);
-      await handleContextualAnalysis(context);
+      const contextWithEnterprise: AnalysisContext = {
+        ...context,
+        enterpriseContext,
+      };
+
+      console.log(
+        "🚀 Début onContextualAnalysis avec contexte:",
+        contextWithEnterprise,
+      );
+      await handleContextualAnalysis(contextWithEnterprise);
       console.log("✅ handleContextualAnalysis terminé avec succès");
       setShowAnalysisForm(false);
       console.log("✅ setShowAnalysisForm(false) appelé");
