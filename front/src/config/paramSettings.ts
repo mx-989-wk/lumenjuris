@@ -1,4 +1,4 @@
-import { Building2, Settings, User } from "lucide-react";
+import { Building2, Settings, User, CreditCard } from "lucide-react";
 import type { SettingsTabItem } from "../types/paramSettings";
 
 // Navigation statique du panneau paramètres.
@@ -17,8 +17,14 @@ export const SETTINGS_TABS: SettingsTabItem[] = [
   },
   {
     id: "preferences",
-    label: "Paramètres de compte",
+    label: "Préférences",
     icon: Settings,
+    description: "",
+  },
+  {
+    id: "abonnements",
+    label: "Abonnements",
+    icon: CreditCard,
     description: "",
   },
 ];

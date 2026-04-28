@@ -309,7 +309,7 @@ export function EnterpriseSettingsPanel({
             <button
               type="button"
               onClick={onEditEnterprise}
-              className="text-xs font-medium text-lumenjuris underline underline-offset-2 transition-colors hover:text-lumenjuris/80"
+              className="text-[14px] border border-gray-400 h-9 rounded-md px-2 font-semibold bg-lumenjuris text-white transition-colors hover:bg-lumenjuris/90"
             >
               Modifier les informations de mon entreprise
             </button>

@@ -1,6 +1,10 @@
 import type { LucideIcon } from "lucide-react";
 
-export type SettingsTab = "account" | "enterprise" | "preferences";
+export type SettingsTab =
+  | "account"
+  | "enterprise"
+  | "preferences"
+  | "abonnements";
 export type ConventionSource = "naf" | "custom";
 export type AuthProvider = "GOOGLE";
 export type GoogleConnectionPanelMode =

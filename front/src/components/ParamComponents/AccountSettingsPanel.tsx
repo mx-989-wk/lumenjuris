@@ -224,7 +224,11 @@ export function AccountSettingsPanel({
         </div>
 
         <section>
-          <Button variant="outline" onClick={onUpdateProfileClick}>
+          <Button
+            variant="outline"
+            onClick={onUpdateProfileClick}
+            className="bg-lumenjuris text-white"
+          >
             Mettre à jour mon profile
           </Button>
         </section>
