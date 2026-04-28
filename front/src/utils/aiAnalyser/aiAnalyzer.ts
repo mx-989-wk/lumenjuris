@@ -71,6 +71,7 @@ export async function analyzeContractWithAI(
         questions: context.specificQuestions?.slice(0, 120),
         regimeLegal: context.legalRegime,
         contractObjective: context.contractObjective,
+        enterpriseContext: context.enterpriseContext,
       },
     );
   }

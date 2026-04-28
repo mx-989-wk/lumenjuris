@@ -27,7 +27,15 @@ export function contextCacheKeyPart(context?: AnalysisContext): string {
         userRole: context.userRole,
         orientation: context.interestOrientation,
         mission: context.missionContext || context.mission || '',
-        questions: (context.specificQuestions || '').slice(0, 200)
+        questions: (context.specificQuestions || '').slice(0, 200),
+        legalRegime: context.legalRegime || '',
+        contractObjective: context.contractObjective || '',
+        enterpriseContext: {
+            collectiveAgreement: context.enterpriseContext?.collectiveAgreement || '',
+            collectiveAgreementIdcc: context.enterpriseContext?.collectiveAgreementIdcc || '',
+            companyLegalForm: context.enterpriseContext?.companyLegalForm || '',
+            companyLegalFormCode: context.enterpriseContext?.companyLegalFormCode || '',
+        },
     };
     return hashString(JSON.stringify(shallow));
 }

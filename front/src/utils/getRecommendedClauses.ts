@@ -2,6 +2,7 @@
 import { ClauseRisk } from '../types';
 import { AnalysisContext } from '../types/contextualAnalysis';
 import { callOpenAI, callOpenAi52, type OpenAIModelId } from './aiClient';
+import { buildEnterpriseContextBlockFromAnalysisContext } from './aiAnalyser/buildingPrompt';
 
 // Interface améliorée pour les recommandations de clauses
 export interface ClauseRecommendation {
@@ -46,9 +47,13 @@ function generateAdaptivePrompt(clause: ClauseRisk, context?: AnalysisContext): 
   const contextualInfo = context ? `
 🎯 CONTEXTE UTILISATEUR :
 - Rôle : ${context.userRole}
-- Mission : ${context.missionContext}
+- Mission : ${context.missionContext || context.mission || 'Analyse contractuelle'}
+- Type de contrat : ${context.contractType || 'Contrat non précisé'}
+- Régime juridique : ${context.legalRegime || 'Non renseigné pour le moment'}
+- Objectif du contrat : ${context.contractObjective || 'Non renseigné pour le moment'}
 - Orientation : ${context.interestOrientation === 'defensive' ? 'Protection maximale' : 
                 context.interestOrientation === 'assertive' ? 'Optimisation avantages' : 'Équilibre contractuel'}
+${buildEnterpriseContextBlockFromAnalysisContext(context)}
 ` : '';
 
   const basePrompt = `
