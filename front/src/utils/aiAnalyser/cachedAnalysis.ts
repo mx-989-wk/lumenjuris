@@ -32,9 +32,7 @@ export function contextCacheKeyPart(context?: AnalysisContext): string {
         contractObjective: context.contractObjective || '',
         enterpriseContext: {
             collectiveAgreement: context.enterpriseContext?.collectiveAgreement || '',
-            collectiveAgreementIdcc: context.enterpriseContext?.collectiveAgreementIdcc || '',
             companyLegalForm: context.enterpriseContext?.companyLegalForm || '',
-            companyLegalFormCode: context.enterpriseContext?.companyLegalFormCode || '',
         },
     };
     return hashString(JSON.stringify(shallow));

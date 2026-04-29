@@ -126,13 +126,7 @@ function mapEnterpriseToAnalysisContext(
   const selectedConvention = getSelectedConventionCollective(enterprise);
   const enterpriseContext: EnterpriseAnalysisContext = {
     collectiveAgreement: cleanEnterpriseContextValue(selectedConvention?.name),
-    collectiveAgreementIdcc: cleanEnterpriseContextValue(
-      selectedConvention?.idccCode,
-    ),
     companyLegalForm: cleanEnterpriseContextValue(enterprise?.statusJuridique),
-    companyLegalFormCode: cleanEnterpriseContextValue(
-      enterprise?.statusJuridiqueCode,
-    ),
   };
 
   return Object.values(enterpriseContext).some(Boolean)

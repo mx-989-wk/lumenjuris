@@ -46,11 +46,9 @@ export interface AnalysisContext {
 export interface EnterpriseAnalysisContext {
   // Convention collective applicable à l'entreprise de l'utilisateur.
   collectiveAgreement?: string | null;
-  collectiveAgreementIdcc?: string | null;
 
   // Forme juridique de l'entreprise de l'utilisateur.
   companyLegalForm?: string | null;
-  companyLegalFormCode?: string | null;
 }
 
 export interface ContextualAnalysisResult {
@@ -160,4 +158,3 @@ export const INDUSTRIES = [
   'Industrie', 'Santé', 'Éducation', 'Finance', 'Restauration',
   'Construction', 'Transport', 'Énergie', 'Média', 'Autre'
 ];
-

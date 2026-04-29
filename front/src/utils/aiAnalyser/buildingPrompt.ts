@@ -28,9 +28,7 @@ export interface PromptContext {
 
 export interface EnterprisePromptContext {
     collectiveAgreement: string;
-    collectiveAgreementIdcc: string;
     companyLegalForm: string;
-    companyLegalFormCode: string;
 }
 
 const UNKNOWN_CONTEXT_VALUE = "Non renseigné pour le moment";
@@ -92,9 +90,7 @@ function mapEnterpriseContextToPromptContext(context: AnalysisContext): Enterpri
 
     return {
         collectiveAgreement: cleanPromptValue(enterpriseContext?.collectiveAgreement),
-        collectiveAgreementIdcc: cleanPromptValue(enterpriseContext?.collectiveAgreementIdcc),
         companyLegalForm: cleanPromptValue(enterpriseContext?.companyLegalForm),
-        companyLegalFormCode: cleanPromptValue(enterpriseContext?.companyLegalFormCode),
     };
 }
 
@@ -106,9 +102,7 @@ function cleanPromptValue(value?: string | null): string {
 function buildEnterpriseContextBlock(context: EnterprisePromptContext): string {
     return [
         "- Convention collective applicable : " + context.collectiveAgreement,
-        "- Code IDCC de la convention collective : " + context.collectiveAgreementIdcc,
         "- Forme juridique de l'entreprise utilisatrice : " + context.companyLegalForm,
-        "- Code de forme juridique : " + context.companyLegalFormCode,
     ].join("\n");
 }
 
@@ -140,9 +134,7 @@ export function buildContextualPrompt(template: string, context: PromptContext):
         contractObjective: context.contractObjective,
         enterpriseContext: context.enterpriseContextBlock,
         collectiveAgreement: context.enterpriseContext.collectiveAgreement,
-        collectiveAgreementIdcc: context.enterpriseContext.collectiveAgreementIdcc,
         companyLegalForm: context.enterpriseContext.companyLegalForm,
-        companyLegalFormCode: context.enterpriseContext.companyLegalFormCode,
     });
 
 }
