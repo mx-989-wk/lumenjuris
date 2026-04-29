@@ -9,7 +9,7 @@ interface createDataDTO {
 export class Google {
   async create(dataDTO: createDataDTO) {
     try {
-      const create = await prisma.authProviderAccount.create({
+      await prisma.authProviderAccount.create({
         data: {
           providerId: dataDTO.providerId,
           provider: "GOOGLE",
@@ -35,6 +35,13 @@ export class Google {
         where: { userId },
       });
       if (dataProvider) {
+        const user = await prisma.user.findUnique({
+          where: { idUser: userId },
+          select: { password: true },
+        });
+        const googleConnectionPanelMode = user?.password
+          ? "google_with_password"
+          : "google_only";
         return {
           success: true,
           message:
@@ -42,6 +49,7 @@ export class Google {
           data: {
             provider: "GOOGLE",
             avatarUrl: dataProvider?.avatarUrl ?? null,
+            googleConnectionPanelMode,
           },
         };
       } else {

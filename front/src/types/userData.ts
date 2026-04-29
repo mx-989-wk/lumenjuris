@@ -37,5 +37,11 @@ export interface UserData {
     isVerified: boolean;
     twoFactorEnabled?: boolean;
   };
-  provider: {} | { provider: string; avatarUrl: string | null };
+  provider:
+    | {}
+    | {
+        provider: string;
+        avatarUrl: string | null;
+        googleConnectionPanelMode?: "google_only" | "google_with_password";
+      };
 }

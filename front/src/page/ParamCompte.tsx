@@ -74,7 +74,19 @@ export function ParamCompte() {
       cgu: false,
     });
     setAccountProvider(
-      provider?.provider === "GOOGLE" ? { provider: "GOOGLE" } : null,
+      provider?.provider === "GOOGLE"
+        ? {
+            provider: "GOOGLE",
+            googleConnectionPanelMode:
+              (
+                provider as {
+                  googleConnectionPanelMode?:
+                    | "google_only"
+                    | "google_with_password";
+                }
+              ).googleConnectionPanelMode ?? "google_only",
+          }
+        : null,
     );
     setEnterpriseInitialSettings(
       normalizeEnterpriseSettings(
@@ -422,6 +434,7 @@ export function ParamCompte() {
       onPasswordChange={setAccountPassword}
       onPasswordBlur={handlePasswordBlur}
       onTwoFactorCheckedChange={handleTwoFactorCheckedChange}
+      onPasswordAdded={() => void fetchUser()}
       onExportDataClick={() => setActiveConfirmationModal("export_data")}
       onDeleteAccountClick={() => setActiveConfirmationModal("delete_account")}
     />
