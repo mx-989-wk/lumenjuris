@@ -1,7 +1,7 @@
 import { prisma } from "../../prisma/singletonPrisma";
 import crypto from "crypto";
 
-type TokenType = "verifyAccount" | "forgotPassword";
+type TokenType = "verifyAccount" | "forgotPassword" | "twoFactor";
 
 export class Token {
   private setExpiresAt(type: string) {
@@ -12,6 +12,9 @@ export class Token {
         today.setMinutes(today.getMinutes() + 15);
         return today;
       case "forgotPassword":
+        today.setMinutes(today.getMinutes() + 15);
+        return today;
+      case "twoFactor":
         today.setMinutes(today.getMinutes() + 15);
         return today;
       default:
@@ -71,6 +74,33 @@ export class Token {
       return {
         success: false,
         message: "Une erreur est survenue lors de la suppression d'un token.",
+      };
+    }
+  }
+
+  // Génère un code OTP à 6 chiffres pour la double authentification (valide pendant 15 min)
+  async createTwoFactorCode(userId: number) {
+    try {
+      // Invalide tout code twoFactor ACTIVE déjà existant pour cet utilisateur
+      await prisma.token.updateMany({
+        where: { userId, type: "twoFactor", status: "ACTIVE" },
+        data: { status: "EXPIRED" },
+      });
+
+      const code = String(crypto.randomInt(100000, 999999));
+      const expiresAt = this.setExpiresAt("twoFactor")!;
+
+      await prisma.token.create({
+        data: { token: code, expiresAt, userId, type: "twoFactor" },
+      });
+
+      return { success: true, code };
+    } catch (err) {
+      console.error(err);
+      return {
+        success: false,
+        message:
+          "Une erreur est survenue lors de la création du code de vérification.",
       };
     }
   }

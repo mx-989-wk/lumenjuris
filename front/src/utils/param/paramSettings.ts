@@ -82,6 +82,7 @@ export function getParamConfirmationModalContent({
   onClose,
   onTwoFactorConfirm,
   onPasswordConfirm,
+  onProfileUpdateConfirm,
   onExportDataConfirm,
   onDeleteAccountConfirm,
 }: {
@@ -89,10 +90,23 @@ export function getParamConfirmationModalContent({
   onClose: () => void;
   onTwoFactorConfirm: () => void;
   onPasswordConfirm: () => void;
+  onProfileUpdateConfirm: () => void;
   onExportDataConfirm: () => void;
   onDeleteAccountConfirm: () => void;
 }): ConfirmationModalContent | null {
   switch (activeConfirmationModal) {
+    case "profile_update":
+      return {
+        title: "Mettre à jour le profil",
+        description:
+          "Voulez-vous enregistrer les modifications de votre profil ?",
+        confirmLabel: "Enregistrer",
+        confirmClassName: "bg-lumenjuris text-white hover:bg-lumenjuris/90",
+        onConfirm: () => {
+          onProfileUpdateConfirm();
+          onClose();
+        },
+      };
     case "two_factor":
       return {
         title: "Authentification à deux facteurs",

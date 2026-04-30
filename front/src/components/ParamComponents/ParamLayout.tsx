@@ -15,9 +15,11 @@ type ParamLayoutProps = {
   accountMeasureRef: RefObject<HTMLElement>;
   enterpriseMeasureRef: RefObject<HTMLElement>;
   preferenceMeasureRef: RefObject<HTMLElement>;
+  subscriptionMeasureRef: RefObject<HTMLElement>;
   accountMeasurePanel: ReactNode;
   enterpriseMeasurePanel: ReactNode;
   preferenceMeasurePanel: ReactNode;
+  preferenceSubscriptionPanel: ReactNode;
 };
 
 export function ParamLayout({
@@ -30,9 +32,11 @@ export function ParamLayout({
   accountMeasureRef,
   enterpriseMeasureRef,
   preferenceMeasureRef,
+  subscriptionMeasureRef,
   accountMeasurePanel,
   enterpriseMeasurePanel,
   preferenceMeasurePanel,
+  preferenceSubscriptionPanel,
 }: ParamLayoutProps) {
   return (
     <>
@@ -112,7 +116,7 @@ export function ParamLayout({
           </div>
         </aside>
 
-        <div className="px-4 py-6 lg:px-6 md:ml-64">
+        <div className="min-h-[calc(vh-64px)] px-4 py-6 lg:px-6 md:ml-64">
           <div className="mx-auto max-w-6xl">
             <div className="mb-16">
               <h1 className="text-2xl font-bold tracking-tight text-gray-900">
@@ -164,12 +168,12 @@ export function ParamLayout({
 
               <div>
                 <section
-                  className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-                  style={
-                    panelMinHeight !== null
-                      ? { minHeight: `${panelMinHeight}px` }
-                      : undefined
-                  }
+                  className="flex flex-col rounded-2xl border border-gray-200 min-h-[600px] bg-white p-6 shadow-sm"
+                  // style={
+                  //   panelMinHeight !== null
+                  //     ? { minHeight: `${panelMinHeight}px` }
+                  //     : undefined
+                  // }
                 >
                   {children}
                 </section>
@@ -201,6 +205,12 @@ export function ParamLayout({
                     className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
                   >
                     {preferenceMeasurePanel}
+                  </section>
+                  <section
+                    ref={subscriptionMeasureRef}
+                    className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                  >
+                    {preferenceSubscriptionPanel}
                   </section>
                 </div>
               </div>

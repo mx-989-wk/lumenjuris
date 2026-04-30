@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import { templateVerifyAccount } from "./template/verifyAccount";
 import { templateResetPassword } from "./template/resetPassword";
+import { templateTwoFactor } from "./template/twoFactor";
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
@@ -177,6 +178,31 @@ export class Mailer {
         message: sending.messageId
           ? `Un email a été envoyé à votre adresse ${this.email}, veuillez consulter votre boîte de réception pour réinitialiser votre mot de passe.`
           : "Une erreur est survenue avec le serveur nous n'avons pas pu envoyer votre email.",
+      };
+    } catch (err) {
+      return this.errorCatching(err);
+    }
+  }
+
+  async sendTwoFactor(code: string, username?: string) {
+    try {
+      const html = this.createHtmlFullContent(
+        templateTwoFactor(code, username),
+      );
+      const mailOptions = this.createOption(
+        html,
+        "Votre code de vérification Lumen Juris",
+      );
+      const sending = await transporter.sendMail(mailOptions);
+
+      if (!sending.messageId) {
+        throw new Error(
+          `Echec lors de l'envoie du code 2FA, messageId indisponible.\n ${sending}`,
+        );
+      }
+      return {
+        success: true,
+        message: `Un code de vérification a été envoyé à ${this.email}. Il est valide 15 minutes.`,
       };
     } catch (err) {
       return this.errorCatching(err);

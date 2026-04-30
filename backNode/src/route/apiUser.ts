@@ -201,21 +201,40 @@ routerUser.post("/auth/login", async (req: Request, res: Response) => {
     const { password, email } = req.body;
     const logUser = await new User().authenticate(password, email);
 
-    if (!logUser.success) {
+    if (!logUser.success || !logUser.data) {
       return res.status(401).json({
         success: false,
         message: "Email ou mot de passe invalide",
       });
     }
 
-    if (logUser.data) {
-      createCookieAuth(logUser.data.idUser, "USER", res);
+    createCookieAuth(logUser.data.idUser, "USER", res);
+
+    if (logUser.data.twoFactorEnabled) {
+      const codeResult = await new Token().createTwoFactorCode(
+        logUser.data.idUser,
+      );
+
+      if (codeResult.success && codeResult.code) {
+        await new Mailer(logUser.data.email).sendTwoFactor(
+          codeResult.code,
+          logUser.data.email,
+        );
+      }
+
+      return res.status(200).json({
+        success: true,
+        twoFactorRequired: true,
+        message: `Un code de vérification a été envoyé à ${logUser.data.email}.`,
+        data: logUser.data,
+      });
     }
 
-    return res.status(logUser.success ? 200 : 400).json({
-      success: logUser.success,
+    return res.status(200).json({
+      success: true,
+      twoFactorRequired: false,
       message: logUser.message,
-      data: logUser.data ?? null,
+      data: logUser.data,
     });
   } catch (err) {
     console.error(
@@ -252,6 +271,7 @@ routerUser.get("/get", authMiddleware, async (req: Request, res: Response) => {
         prenom: user.data.prenom,
         role: user.data.role,
         isVerified: user.data.isVerified,
+        twoFactorEnabled: user.data.twoFactorEnabled,
       },
       billing: {
         stripeCustomerId: user.data.stripeCustomerId,
@@ -261,8 +281,9 @@ routerUser.get("/get", authMiddleware, async (req: Request, res: Response) => {
     };
 
     const userProviderGoogle = await new Google().get(idUser);
+    console.log("USER GOOGLE PROVIDE :", userProviderGoogle);
 
-    if (userProviderGoogle.data) {
+    if (userProviderGoogle?.data) {
       dataReturn.provider = userProviderGoogle.data;
     }
 
@@ -283,7 +304,7 @@ routerUser.get("/get", authMiddleware, async (req: Request, res: Response) => {
 routerUser.put("/", authMiddleware, async (req: Request, res: Response) => {
   try {
     const idUser = Number(req.idUser);
-    const { email, nom, prenom, password } = req.body ?? {};
+    const { email, nom, prenom, password, twoFactorEnabled } = req.body ?? {};
 
     const update = await new User().update(idUser, {
       ...(typeof email === "string" ? { email } : {}),
@@ -292,6 +313,7 @@ routerUser.put("/", authMiddleware, async (req: Request, res: Response) => {
       ...(typeof password === "string" && password.trim()
         ? { password: password.trim() }
         : {}),
+      ...(typeof twoFactorEnabled === "boolean" ? { twoFactorEnabled } : {}),
     });
 
     if (!update.success) {
@@ -329,7 +351,7 @@ routerUser.put("/", authMiddleware, async (req: Request, res: Response) => {
           isVerified: Boolean(user.data.isVerified),
           cgu: Boolean(userMeta?.cgu),
         },
-        provider: userProviderGoogle.data ?? null,
+        provider: userProviderGoogle?.data ?? null,
       },
     });
   } catch (err) {
@@ -414,17 +436,130 @@ routerUser.put(
   },
 );
 
+// Route d'activation de l'auth à deux facteurs avec envoi d'un code à l'utilisateur pour valider l'activation
 routerUser.post(
   "/two-factor",
   authMiddleware,
-  async (_req: Request, res: Response) => {
-    return res.status(200).json({
-      success: true,
-      message: "La double authentification n'est pas encore disponible.",
-      data: {
-        enabled: false,
-      },
-    });
+  async (req: Request, res: Response) => {
+    try {
+      const idUser = Number(req.idUser);
+
+      const user = await prisma.user.findUnique({
+        where: { idUser },
+        select: { email: true, prenom: true, nom: true },
+      });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "Utilisateur introuvable.",
+        });
+      }
+
+      const tokenService = new Token();
+      const result = await tokenService.createTwoFactorCode(idUser);
+
+      if (!result.success || !result.code) {
+        return res.status(500).json({
+          success: false,
+          message: "Impossible de générer le code de vérification.",
+        });
+      }
+
+      const mailer = await new Mailer(user.email).sendTwoFactor(
+        result.code,
+        `${user.prenom ?? ""} ${user.nom ?? ""}`.trim(),
+      );
+
+      return res.status(mailer.success ? 200 : 500).json({
+        success: mailer.success,
+        message: mailer.message,
+        data: { enabled: false },
+      });
+    } catch (err) {
+      console.error(
+        `Une erreur est survenue dans la route /two-factor : \n ${err}`,
+      );
+      return res.status(500).json({
+        success: false,
+        message: "Une erreur serveur est survenue lors de l'envoi du code.",
+      });
+    }
+  },
+);
+
+routerUser.post(
+  "/two-factor/verify",
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const idUser = Number(req.idUser);
+      const { code } = req.body;
+
+      if (!code || typeof code !== "string") {
+        return res.status(400).json({
+          success: false,
+          message: "Un code de vérification est requis.",
+        });
+      }
+
+      const tokenEntry = await prisma.token.findFirst({
+        where: { token: code, userId: idUser, type: "twoFactor" },
+      });
+
+      if (!tokenEntry) {
+        return res.status(400).json({
+          success: false,
+          message: "Code invalide.",
+        });
+      }
+
+      if (tokenEntry.status === "USED") {
+        return res.status(400).json({
+          success: false,
+          message: "Ce code a déjà été utilisé.",
+        });
+      }
+
+      if (
+        tokenEntry.expiresAt < new Date() ||
+        tokenEntry.status === "EXPIRED"
+      ) {
+        await prisma.token.update({
+          where: { idToken: tokenEntry.idToken },
+          data: { status: "EXPIRED" },
+        });
+        return res.status(400).json({
+          success: false,
+          message: "Ce code a expiré. Veuillez en demander un nouveau.",
+        });
+      }
+
+      await Promise.all([
+        prisma.token.update({
+          where: { idToken: tokenEntry.idToken },
+          data: { status: "USED" },
+        }),
+        prisma.user.update({
+          where: { idUser },
+          data: { twoFactorEnabled: true },
+        }),
+      ]);
+
+      return res.status(200).json({
+        success: true,
+        message: "Code vérifié avec succès.",
+      });
+    } catch (err) {
+      console.error(
+        `Une erreur est survenue dans la route /two-factor/verify : \n ${err}`,
+      );
+      return res.status(500).json({
+        success: false,
+        message:
+          "Une erreur serveur est survenue lors de la vérification du code.",
+      });
+    }
   },
 );
 

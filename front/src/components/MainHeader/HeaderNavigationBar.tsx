@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOutIcon,
   MonitorCheck,
+  AlertCircleIcon,
 } from "lucide-react";
 import { Button } from "../ui/Button";
 import {
@@ -21,8 +22,7 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
-import { useAuth } from "../../context/AuthContext";
-import { UserDataProfile } from "../../types/userData";
+import { useUserStore } from "../../store/userStore";
 
 interface HeaderNavBarProps {
   onNavClick?: () => void;
@@ -31,73 +31,28 @@ interface HeaderNavBarProps {
 const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { login, logout } = useAuth();
 
-  const [isConnected, setIsConnected] = useState(false);
-  const [userData, setUserData] = useState<UserDataProfile | null>(null);
-  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
-  const [userInfoError, setUserInfoError] = useState<string | null>(null);
+  const { userData, isConnected, userAvatarUrl, fetchUser, logoutUser } =
+    useUserStore();
+
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/api/user/get", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-
-        const dataResponse = await response.json();
-        console.log("USER DATA :", dataResponse);
-        if (!dataResponse.success) {
-          setUserInfoError(dataResponse.message);
-        } else if (
-          dataResponse.success &&
-          dataResponse.data.profile.isVerified
-        ) {
-          setIsConnected(true);
-          setUserData(dataResponse.data.profile);
-          setUserAvatarUrl(dataResponse.data.provider.avatarUrl);
-          login(
-            dataResponse.data.profile.role,
-            dataResponse.data.profile.isVerified,
-            true,
-          );
-        }
-      } catch (error) {
-        console.error("🛑🛑🛑 ERREUR SERVEUR GET USER", error);
-        setUserInfoError("Un problème est survenu, veuillez vous reconnecter.");
-      }
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
     };
-    fetchData();
-  }, [isConnected]);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  const handleUserLogout = () => {
-    const fetchLogout = async () => {
-      try {
-        const response = await fetch("/api/user/auth/logout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        });
-        const logoutResponse = await response.json();
-        console.log("LOGOUT RES : ", logoutResponse);
-        if (logoutResponse.success) {
-          setIsConnected(false);
-          setUserData(null);
-          logout();
-          setUserInfoError(logoutResponse.message);
-          navigate("/inscription");
-        } else {
-          setUserInfoError(logoutResponse.message);
-        }
-      } catch (error) {
-        setUserInfoError(
-          "Une erreur s'est produite, vous n'avez pas été déconnecté...",
-        );
-        console.log(error);
-      }
-    };
-    fetchLogout();
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  const handleUserLogout = async () => {
+    const success = await logoutUser();
+    if (success) navigate("/inscription");
   };
 
   return (
@@ -143,7 +98,7 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
             </Button>
           </Link>
         )}
-        {isConnected && userData?.role === "ADMIN" && (
+        {isConnected && userData?.profile.role === "ADMIN" && (
           <Link to="/sandbox">
             <Button
               variant="ghost"
@@ -159,7 +114,7 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
             </Button>
           </Link>
         )}
-        {isConnected && userData?.role === "ADMIN" && (
+        {isConnected && userData?.profile.role === "ADMIN" && (
           <Link to="/monitoring">
             <Button
               variant="ghost"
@@ -220,7 +175,7 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
             </Button>
           </Link>
         )}
-        {isConnected && userData?.role === "ADMIN" && (
+        {isConnected && userData?.profile.role === "ADMIN" && (
           <Link to="/sandbox">
             <Button
               variant="ghost"
@@ -237,7 +192,7 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
             </Button>
           </Link>
         )}
-        {isConnected && userData?.role === "ADMIN" && (
+        {isConnected && userData?.profile.role === "ADMIN" && (
           <Link to="/monitoring">
             <Button
               variant="ghost"
@@ -258,6 +213,29 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
 
       {isConnected ? (
         <section className="flex items-center gap-3">
+          {!userData?.enterprise && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="absolute top-2 rounded-full w-6 h-6 bg-transparent border border-destructive flex justify-center items-center animate-ping"></div>
+                    <AlertCircleIcon className="size-6 text-destructive" />
+                  </button>
+                }
+              />
+              <DropdownMenuContent
+                sideOffset={6}
+                alignOffset={-60}
+                className="min-w-28 bg-lumenjuris-sidebar ring-lumenjuris/60 font-medium text-sm px-4 text-gray-400"
+              >
+                <p>Pensez à compléter les informations manquantes dans : </p>
+                <Link to="/mon-compte">
+                  <button className="font-semibold text-gray-100">{`Mon compte > Mon entreprise`}</button>
+                </Link>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
             <Bell className="h-5 w-5 text-gray-400" />
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-green-500" />
@@ -266,29 +244,43 @@ const HeaderNavigationBar = ({ onNavClick }: HeaderNavBarProps) => {
             {userAvatarUrl ? (
               <img
                 src={userAvatarUrl}
-                className=" h-8 w-8 rounded-full object-cover border border-lumenjuris/60"
+                className="hidden md:block h-8 w-8 rounded-full object-cover border border-lumenjuris/60"
               ></img>
             ) : (
-              <div className="flex h-8 w-8 rounded-full bg-lumenjuris items-center justify-center text-white text-xs font-medium">
-                {userData?.prenom
-                  ? `${userData.prenom.slice(0, 1)}${userData.nom.slice(0, 1)}`
-                  : `${userData?.nom.slice(0, 1)}`}
+              <div className="hidden md:flex h-8 w-8 rounded-full bg-lumenjuris items-center justify-center text-white text-xs font-medium">
+                {userData?.profile.prenom
+                  ? `${userData.profile.prenom.slice(0, 1)}${userData.profile.nom.slice(0, 1)}`
+                  : `${userData?.profile.nom.slice(0, 1)}`}
               </div>
             )}
 
             <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <button className="hidden md:flex items-center gap-1 cursor-pointer text-sm font-medium text-gray-800">
-                    {userData?.prenom
-                      ? `${userData.prenom} ${userData.nom.slice(0, 1)}.`
-                      : `${userData?.nom.slice(0, 12)}.`}
-                    <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
-                  </button>
-                }
-              />
+              {isMobile ? (
+                <DropdownMenuTrigger
+                  render={
+                    <button className="flex md:hidden h-8 w-8 rounded-full bg-lumenjuris justify-center items-center cursor-pointer text-xs font-medium text-white">
+                      {userData?.profile.prenom
+                        ? `${userData.profile.prenom.slice(0, 1)}${userData.profile.nom.slice(0, 1)}`
+                        : `${userData?.profile.nom.slice(0, 1)}`}
+                    </button>
+                  }
+                />
+              ) : (
+                <DropdownMenuTrigger
+                  render={
+                    <button className="hidden md:flex items-center gap-1 cursor-pointer text-sm font-medium text-gray-800">
+                      {userData?.profile.prenom
+                        ? `${userData.profile.prenom} ${userData.profile.nom.slice(0, 1)}.`
+                        : `${userData?.profile.nom.slice(0, 12)}.`}
+                      <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                    </button>
+                  }
+                />
+              )}
+
               <DropdownMenuContent
-                sideOffset={22}
+                sideOffset={14}
+                alignOffset={2}
                 className="min-w-28 bg-lumenjuris-sidebar ring-lumenjuris/60 font-medium text-sm px-4"
               >
                 <button

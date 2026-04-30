@@ -6,7 +6,9 @@ import { AccountSettingsPanel } from "../components/ParamComponents/AccountSetti
 import { EnterpriseSettingsPanel } from "../components/ParamComponents/EnterpriseSettingsPanel";
 import { ParamLayout } from "../components/ParamComponents/ParamLayout";
 import { PreferenceSettingsPanel } from "../components/ParamComponents/PreferenceSettingsPanel";
+import { SubscriptionSettingsPanel } from "../components/ParamComponents/SubscriptionSettingsPanel";
 import { ConfirmationModal } from "../components/ui/ConfirmationModal";
+import { TwoFactorCodeModal } from "../components/ui/TwoFactorCodeModal";
 import type {
   AccountConfirmationModal,
   AccountProfile,
@@ -14,7 +16,6 @@ import type {
   ApiResponse,
   EnterpriseSettings,
   SettingsTab,
-  UserGetData,
   UserPreferenceSettings,
 } from "../types/paramSettings";
 import {
@@ -23,7 +24,7 @@ import {
   normalizeEnterpriseSettings,
 } from "../utils/param/paramSettings";
 
-import { useAuth } from "../context/AuthContext";
+import { useUserStore } from "../store/userStore";
 
 const EMPTY_ACCOUNT_PROFILE: AccountProfile = {
   prenom: "",
@@ -42,9 +43,15 @@ export function ParamCompte() {
   const [accountPassword, setAccountPassword] = useState("");
   const [accountProvider, setAccountProvider] = useState<AccountProvider>(null);
   const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
+  const [isTwoFactorCodeModalOpen, setIsTwoFactorCodeModalOpen] =
+    useState(false);
   const [activeConfirmationModal, setActiveConfirmationModal] =
     useState<AccountConfirmationModal | null>(null);
   const [isDyslexicModeEnabled, setIsDyslexicModeEnabled] = useState(false);
+  const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false);
+  const [profileUpdateError, setProfileUpdateError] = useState(false);
+  const [enterpriseUpdateSuccess, setEnterpriseUpdateSuccess] = useState(false);
+  const [enterpriseUpdateError, setEnterpriseUpdateError] = useState(false);
   const [enterpriseInitialSettings, setEnterpriseInitialSettings] =
     useState<EnterpriseSettings>(createEmptyEnterpriseSettings());
 
@@ -53,54 +60,55 @@ export function ParamCompte() {
   const accountMeasureRef = useRef<HTMLElement>(null);
   const enterpriseMeasureRef = useRef<HTMLElement>(null);
   const preferenceMeasureRef = useRef<HTMLElement>(null);
+  const subscriptionMeasureRef = useRef<HTMLElement>(null);
 
-  const { userConnected } = useAuth();
+  const { isConnected: userConnected, userData, fetchUser } = useUserStore();
+
+  useEffect(() => {
+    if (!userData) return;
+
+    const provider = userData.provider as { provider?: string };
+    setAccountProfile({
+      prenom: userData.profile.prenom ?? "",
+      nom: userData.profile.nom ?? "",
+      email: userData.profile.email,
+      isVerified: userData.profile.isVerified,
+      cgu: false,
+    });
+    setAccountProvider(
+      provider?.provider === "GOOGLE"
+        ? {
+            provider: "GOOGLE",
+            googleConnectionPanelMode:
+              (
+                provider as {
+                  googleConnectionPanelMode?:
+                    | "google_only"
+                    | "google_with_password";
+                }
+              ).googleConnectionPanelMode ?? "google_only",
+          }
+        : null,
+    );
+    setEnterpriseInitialSettings(
+      normalizeEnterpriseSettings(
+        userData.enterprise as Partial<EnterpriseSettings> | null,
+      ),
+    );
+    setIsTwoFactorEnabled(Boolean(userData.profile.twoFactorEnabled));
+  }, [userData]);
 
   useEffect(() => {
     let isCancelled = false;
 
-    const loadSettings = async () => {
+    const loadPreferences = async () => {
       try {
-        const [userResponse, preferenceResponse] = await Promise.all([
-          fetch("/api/user/get", {
-            credentials: "include",
-          }),
-          fetch("/api/user/preferences", {
-            credentials: "include",
-          }),
-        ]);
-
-        const userPayload = (await userResponse
-          .json()
-          .catch(() => null)) as ApiResponse<UserGetData> | null;
+        const preferenceResponse = await fetch("/api/user/preferences", {
+          credentials: "include",
+        });
         const preferencePayload = (await preferenceResponse
           .json()
           .catch(() => null)) as ApiResponse<UserPreferenceSettings> | null;
-
-        if (
-          userResponse.ok &&
-          userPayload?.success &&
-          userPayload.data &&
-          !isCancelled
-        ) {
-          setAccountProfile({
-            prenom: userPayload.data.profile.prenom ?? "",
-            nom: userPayload.data.profile.nom ?? "",
-            email: userPayload.data.profile.email ?? "",
-            isVerified: Boolean(userPayload.data.profile.isVerified),
-            cgu: false,
-          });
-          setAccountProvider(
-            userPayload.data.provider?.provider === "GOOGLE"
-              ? {
-                  provider: "GOOGLE",
-                }
-              : null,
-          );
-          setEnterpriseInitialSettings(
-            normalizeEnterpriseSettings(userPayload.data.enterprise),
-          );
-        }
 
         if (
           preferenceResponse.ok &&
@@ -114,13 +122,13 @@ export function ParamCompte() {
         }
       } catch (error) {
         console.error(
-          "Impossible de charger les paramètres utilisateur.",
+          "Impossible de charger les préférences utilisateur.",
           error,
         );
       }
     };
 
-    void loadSettings();
+    void loadPreferences();
 
     return () => {
       isCancelled = true;
@@ -206,6 +214,7 @@ export function ParamCompte() {
     }> | null;
 
     if (!response.ok || !payload?.success || !payload.data) {
+      setProfileUpdateError(true);
       throw new Error(
         payload?.message ||
           "Impossible de mettre a jour les informations du compte.",
@@ -226,12 +235,6 @@ export function ParamCompte() {
     }
   };
 
-  const handleProfileFieldBlur = () => {
-    void persistAccountSettings().catch((error) => {
-      console.error(error);
-    });
-  };
-
   const handlePasswordBlur = () => {
     if (!accountPassword.trim()) {
       return;
@@ -240,13 +243,45 @@ export function ParamCompte() {
     setActiveConfirmationModal("password_change");
   };
 
-  const handleTwoFactorCheckedChange = (checked: boolean) => {
+  const handleTwoFactorCodeVerify = async (code: string) => {
+    const response = await fetch("/api/user/two-factor/verify", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+    const payload = (await response
+      .json()
+      .catch(() => null)) as ApiResponse<unknown> | null;
+
+    if (!response.ok || !payload?.success) {
+      throw new Error(payload?.message ?? "Code invalide. Veuillez réessayer.");
+    }
+
+    setIsTwoFactorEnabled(true);
+    setIsTwoFactorCodeModalOpen(false);
+  };
+
+  const handleTwoFactorCheckedChange = async (checked: boolean) => {
     if (checked) {
       setActiveConfirmationModal("two_factor");
       return;
+    } else if (!checked) {
+      try {
+        const response = await fetch("/api/user", {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ twoFactorEnabled: false }),
+        });
+        const confirmResponse = await response.json();
+        if (response.ok || confirmResponse.success) {
+          setIsTwoFactorEnabled(false);
+        }
+      } catch (error) {
+        console.log("TWO FACTOR DISABLED ERROR :", error);
+      }
     }
-
-    setIsTwoFactorEnabled(false);
   };
 
   const handlePreferenceCheckedChange = (checked: boolean) => {
@@ -319,29 +354,38 @@ export function ParamCompte() {
         .then(async (response) => {
           const payload = (await response
             .json()
-            .catch(() => null)) as ApiResponse<{
-            enabled?: boolean;
-          }> | null;
+            .catch(() => null)) as ApiResponse<unknown> | null;
 
           if (!response.ok || !payload?.success) {
             throw new Error(
               payload?.message ||
-                "Impossible de mettre a jour la double authentification.",
+                "Impossible d'envoyer le code de vérification.",
             );
           }
 
-          setIsTwoFactorEnabled(Boolean(payload.data?.enabled));
+          setActiveConfirmationModal(null);
+          setIsTwoFactorCodeModalOpen(true);
         })
         .catch((error) => {
           console.error(error);
-          setIsTwoFactorEnabled(false);
         });
     },
+
     onPasswordConfirm: () => {
       void persistAccountSettings({ includePassword: true }).catch((error) => {
         console.error(error);
       });
     },
+
+    onProfileUpdateConfirm: () => {
+      void persistAccountSettings()
+        .then(() => setProfileUpdateSuccess(true))
+        .catch((error) => {
+          setProfileUpdateError(true);
+          console.error(error);
+        });
+    },
+
     onExportDataConfirm: () => {
       void fetch("/api/user/export-data", {
         method: "POST",
@@ -350,6 +394,7 @@ export function ParamCompte() {
         console.error(error);
       });
     },
+
     onDeleteAccountConfirm: () => {
       void fetch("/api/user/account", {
         method: "DELETE",
@@ -360,17 +405,38 @@ export function ParamCompte() {
     },
   });
 
+  const onEnterpriseUpdateConfirm = () => {
+    void enterprise
+      .handleSaveEnterpriseEdit()
+      .then(() => {
+        setEnterpriseUpdateSuccess(true);
+        void fetchUser();
+      })
+      .catch((error) => {
+        setEnterpriseUpdateError(true);
+        console.error(error);
+      });
+  };
+
   const accountPanel = (
     <AccountSettingsPanel
       profile={accountProfile}
       password={accountPassword}
+      setPassword={setAccountPassword}
       provider={accountProvider}
       isTwoFactorEnabled={isTwoFactorEnabled}
       onProfileFieldChange={handleProfileFieldChange}
-      onProfileFieldBlur={handleProfileFieldBlur}
+      onUpdateProfileClick={() => setActiveConfirmationModal("profile_update")}
+      profileUpdateSuccess={profileUpdateSuccess}
+      onProfileUpdateSuccessClose={() => setProfileUpdateSuccess(false)}
+      profileUpdateError={profileUpdateError}
+      onProfileUpdateErrorClose={() => {
+        setProfileUpdateError(false);
+      }}
       onPasswordChange={setAccountPassword}
       onPasswordBlur={handlePasswordBlur}
       onTwoFactorCheckedChange={handleTwoFactorCheckedChange}
+      onPasswordAdded={() => void fetchUser()}
       onExportDataClick={() => setActiveConfirmationModal("export_data")}
       onDeleteAccountClick={() => setActiveConfirmationModal("delete_account")}
     />
@@ -383,11 +449,11 @@ export function ParamCompte() {
       isEditingEnterprise={enterprise.isEditingEnterprise}
       onEditEnterprise={enterprise.handleEditEnterprise}
       onCancelEnterpriseEdit={enterprise.handleCancelEnterpriseEdit}
-      onSaveEnterpriseEdit={() => {
-        void enterprise.handleSaveEnterpriseEdit().catch((error) => {
-          console.error(error);
-        });
-      }}
+      onSaveEnterpriseEdit={onEnterpriseUpdateConfirm}
+      enterpriseUpdateSuccess={enterpriseUpdateSuccess}
+      onEnterpriseUpdateSuccessClose={() => setEnterpriseUpdateSuccess(false)}
+      enterpriseUpdateError={enterpriseUpdateError}
+      onEnterpriseUpdateErrorClose={() => setEnterpriseUpdateError(false)}
       onEnterpriseFieldChange={enterprise.handleEnterpriseFieldChange}
       onEnterpriseAddressFieldChange={
         enterprise.handleEnterpriseAddressFieldChange
@@ -409,6 +475,8 @@ export function ParamCompte() {
     />
   );
 
+  const subscriptionPanel = <SubscriptionSettingsPanel />;
+
   return !userConnected ? (
     <Navigate to="/inscription" />
   ) : (
@@ -422,15 +490,19 @@ export function ParamCompte() {
         accountMeasureRef={accountMeasureRef}
         enterpriseMeasureRef={enterpriseMeasureRef}
         preferenceMeasureRef={preferenceMeasureRef}
+        subscriptionMeasureRef={subscriptionMeasureRef}
         accountMeasurePanel={accountPanel}
         enterpriseMeasurePanel={enterprisePanel}
         preferenceMeasurePanel={preferencePanel}
+        preferenceSubscriptionPanel={subscriptionPanel}
       >
         {activeTab === "account"
           ? accountPanel
           : activeTab === "enterprise"
             ? enterprisePanel
-            : preferencePanel}
+            : activeTab === "preferences"
+              ? preferencePanel
+              : subscriptionPanel}
       </ParamLayout>
 
       {confirmationModalContent ? (
@@ -444,6 +516,16 @@ export function ParamCompte() {
           onConfirm={confirmationModalContent.onConfirm}
         />
       ) : null}
+
+      <TwoFactorCodeModal
+        open={isTwoFactorCodeModalOpen}
+        email={accountProfile.email}
+        onCancel={() => {
+          setIsTwoFactorCodeModalOpen(false);
+          setIsTwoFactorEnabled(false);
+        }}
+        onVerify={handleTwoFactorCodeVerify}
+      />
     </>
   );
 }

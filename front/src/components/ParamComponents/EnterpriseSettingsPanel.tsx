@@ -2,10 +2,8 @@ import type { EnterpriseSettings } from "../../types/paramSettings";
 import { getSelectedConventionLabel } from "../../utils/param/paramSettings";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
-import {
-  SettingsDisplayField,
-  SettingsField,
-} from "../ui/SettingsField";
+import { SettingsDisplayField, SettingsField } from "../ui/SettingsField";
+import { AlertBanner } from "../common/AlertBanner";
 
 type EnterpriseSettingsPanelProps = {
   enterpriseSettings: EnterpriseSettings;
@@ -14,6 +12,10 @@ type EnterpriseSettingsPanelProps = {
   onEditEnterprise: () => void;
   onCancelEnterpriseEdit: () => void;
   onSaveEnterpriseEdit: () => void;
+  enterpriseUpdateSuccess: boolean;
+  onEnterpriseUpdateSuccessClose: () => void;
+  enterpriseUpdateError: boolean;
+  onEnterpriseUpdateErrorClose: () => void;
   onEnterpriseFieldChange: (
     field: Exclude<keyof EnterpriseSettings, "address" | "idccSelections">,
     value: string,
@@ -38,6 +40,10 @@ export function EnterpriseSettingsPanel({
   onEditEnterprise,
   onCancelEnterpriseEdit,
   onSaveEnterpriseEdit,
+  enterpriseUpdateSuccess,
+  onEnterpriseUpdateSuccessClose,
+  enterpriseUpdateError,
+  onEnterpriseUpdateErrorClose,
   onEnterpriseFieldChange,
   onEnterpriseAddressFieldChange,
   shouldShowInseePrefill,
@@ -60,6 +66,25 @@ export function EnterpriseSettingsPanel({
           Informations éditables de l’entreprise et de son adresse.
         </p>
       </div>
+
+      {enterpriseUpdateSuccess && (
+        <AlertBanner
+          title="Entreprise mise à jour !"
+          variant="success"
+          detail="Les informations de votre entreprise ont bien été enregistrées."
+          duration={6000}
+          onClose={onEnterpriseUpdateSuccessClose}
+        />
+      )}
+      {enterpriseUpdateError && (
+        <AlertBanner
+          title="Echec de la mise à jour !"
+          variant="error"
+          detail="Les informations de l'entreprise n'ont pu être mises à jour. Veuillez réessayer."
+          duration={6000}
+          onClose={onEnterpriseUpdateErrorClose}
+        />
+      )}
 
       {shouldShowInseePrefill ? (
         <div className="space-y-3 rounded-xl border border-gray-300 bg-gray-50 px-4 py-4">
@@ -237,7 +262,10 @@ export function EnterpriseSettingsPanel({
               label="Nom entreprise"
               value={currentEnterprise.name}
             />
-            <SettingsDisplayField label="SIREN" value={currentEnterprise.siren} />
+            <SettingsDisplayField
+              label="SIREN"
+              value={currentEnterprise.siren}
+            />
             <SettingsDisplayField
               label="Code NAF"
               value={currentEnterprise.codeNaf}
@@ -281,7 +309,7 @@ export function EnterpriseSettingsPanel({
             <button
               type="button"
               onClick={onEditEnterprise}
-              className="text-xs font-medium text-lumenjuris underline underline-offset-2 transition-colors hover:text-lumenjuris/80"
+              className="text-[14px] border border-gray-400 h-9 rounded-md px-2 font-semibold bg-lumenjuris text-white transition-colors hover:bg-lumenjuris/90"
             >
               Modifier les informations de mon entreprise
             </button>

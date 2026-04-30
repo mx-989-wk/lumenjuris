@@ -1,6 +1,10 @@
 import type { LucideIcon } from "lucide-react";
 
-export type SettingsTab = "account" | "enterprise" | "preferences";
+export type SettingsTab =
+  | "account"
+  | "enterprise"
+  | "preferences"
+  | "subscription";
 export type ConventionSource = "naf" | "custom";
 export type AuthProvider = "GOOGLE";
 export type GoogleConnectionPanelMode =
@@ -10,6 +14,7 @@ export type GoogleConnectionPanelMode =
 export type AccountConfirmationModal =
   | "two_factor"
   | "password_change"
+  | "profile_update"
   | "export_data"
   | "delete_account";
 
@@ -93,6 +98,7 @@ export type UserGetData = {
     prenom: string | null;
     role?: string;
     isVerified: boolean;
+    twoFactorEnabled?: boolean;
   };
   billing: {
     stripeCustomerId: string | null;
