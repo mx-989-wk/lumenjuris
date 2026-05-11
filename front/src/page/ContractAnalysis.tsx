@@ -64,10 +64,6 @@ import type { MarketAnalysisResult } from "../utils/marketAnalysis";
 
 import { useUserStore } from "../store/userStore";
 import { fetchProxy } from "../utils/fetchProxy";
-// ---------------------------------------------------------------------
-// SUPPRIMER LA FONCTION DÉPLACÉE PAR ERREUR (elle existe déjà en utils)
-// ---------------------------------------------------------------------
-
 function getProcessingStatusLines(
   phase: string,
   analysisProgress?: AnalysisProgress | null,
