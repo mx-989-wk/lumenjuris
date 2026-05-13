@@ -207,6 +207,7 @@ export default function ContractAnalysis() {
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const currentHistoryIdRef = useRef<string | null>(null);
   const [historyItems, setHistoryItems] = useState<ContractHistoryItem[]>([]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     loadContractHistoryIndex().then(setHistoryItems).catch(() => {});
@@ -995,16 +996,20 @@ export default function ContractAnalysis() {
         showReanalyze={!!contract}
       />
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          <DocumentHistorySidebar
-            items={visibleHistoryItems}
-            activeId={currentHistoryId}
-            onOpen={handleOpenHistoryItem}
-            onDelete={handleDeleteHistoryItem}
-          />
+      <DocumentHistorySidebar
+        items={visibleHistoryItems}
+        activeId={currentHistoryId}
+        onOpen={handleOpenHistoryItem}
+        onDelete={handleDeleteHistoryItem}
+        onCollapse={setSidebarCollapsed}
+      />
 
-          <div className="min-w-0 flex-1 w-full">
+      <main
+        className={`px-4 py-8 transition-all duration-300 ease-in-out ${
+          sidebarCollapsed ? "pl-14" : "pl-72"
+        }`}
+      >
+          <div className="min-w-0 w-full">
             {!contract && (
               <div className="max-w-5xl mx-auto space-y-8">
                 <div className="mx-auto max-w-2xl text-center">
@@ -1089,7 +1094,7 @@ export default function ContractAnalysis() {
               )}
 
             {contract?.processed && !displayedIsProcessing && (
-              <div className="max-w-7xl mx-auto">
+              <div className={sidebarCollapsed ? "w-full px-3" : "max-w-7xl mx-auto"}>
                 {/* Tableau de bord des risques supprimé (allègement UI) */}
 
             {/* Zone principale - Document avec sidebar intégrée */}
@@ -1120,6 +1125,7 @@ export default function ContractAnalysis() {
                       recommendationIndex={recommendationIndex}
                       setRecommendationIndex={handleIncrementIndexRecommendation}
                       activeClauseId={selectedClause}
+                      isFullscreen={sidebarCollapsed}
                       ref={documentViewerRef}
                     />
                   </div>
@@ -1140,7 +1146,6 @@ export default function ContractAnalysis() {
               </div>
             )}
           </div>
-        </div>
       </main>
 
       {/* Détails de la clause sélectionnée */}

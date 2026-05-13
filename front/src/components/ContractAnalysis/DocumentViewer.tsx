@@ -59,6 +59,7 @@ interface DocumentViewerProps {
   recommendationIndex: number;
   setRecommendationIndex: (number: number) => void;
   activeClauseId: string | null;
+  isFullscreen?: boolean;
 }
 
 export interface DocumentViewerRef {
@@ -79,6 +80,7 @@ export const DocumentViewer = forwardRef<
       recommendationIndex: _recommendationIndex,
       setRecommendationIndex: _setRecommendationIndex,
       activeClauseId,
+      isFullscreen = false,
     },
     ref,
   ) => {
@@ -301,7 +303,7 @@ export const DocumentViewer = forwardRef<
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4 }}
               >
-                <div className="max-w-4xl mx-auto">
+                <div className={isFullscreen ? "" : "max-w-4xl mx-auto"}>
                   {activeClauseId && (
                     <style>{`[data-clause-risk-id]:not([data-clause-risk-id="${activeClauseId}"]) {background-color: transparent !important; border-bottom-color: transparent !important; transition: background-color 250, border-bottom-color 250}`}</style>
                   )}
