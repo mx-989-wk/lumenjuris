@@ -83,7 +83,7 @@ export const EnhancedClauseDetail: React.FC<Props> = ({ clause, context, onClose
 
   const [tab, setTab] = useState<Tab>('overview');
   const [expanded, setExpanded] = useState(false);
-  const [clauseAiModel, setClauseAiModel] = useState<OpenAIModelId>('gpt-4o');
+  const [clauseAiModel, setClauseAiModel] = useState<OpenAIModelId>('gpt-5.4-nano');
   const [alternatives, setAlternatives] = useState<Recommendation[] | null>(null);
   const setContextClause = useChatStore(s => s.setContextClause);
 
